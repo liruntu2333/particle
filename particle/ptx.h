@@ -2,8 +2,9 @@
 #define PTX_H
 
 #include "xsimd/xsimd.hpp"
+#include "AlignedVector.h"
 
-constexpr unsigned Alignment = 8;
+constexpr int FloatAlignment = 4;
 
 struct ptx_uniform {
 
@@ -33,42 +34,60 @@ struct ptx_soa {
     float* pCurLife;
     float* pMaxLife;
 
-    float* pPosX;
-    float* pPosY;
-    float* pPosZ;
-
-    float* pVelX;
-    float* pVelY;
-    float* pVelZ;
-
-    float* pColorR;
-    float* pColorG;
-    float* pColorB;
-    float* pColorA;
+    //float* PositionChunk[3];
+    //float* VelocityChunk[3];
+    //float* ColorChunk[4];
+    std::array<AlignedVector<float, FloatAlignment>, 3> Position;
+    std::array<AlignedVector<float, FloatAlignment>, 3> Velocity;
+    std::array<AlignedVector<float, FloatAlignment>, 3> Color;
 
     float* pSpin;
 
     void Tick(const ptx_uniform* _pUni, float _dt) {
+	    for (int i = 0; i < 3; ++i)
+	    {
+		    for (int j = 0; j < MAX; ++j)
+		    {
+			    
+		    }
+            xsimd::batch<float, xsimd::avx2> v;
+            v = xsimd::batch<float, xsimd::avx2>::load_aligned(pVelX);
+            xsimd::batch<float, xsimd::avx2> p;
+            p = xsimd::batch<float, xsimd::avx2>::load_aligned(pPosX);
 
-        namespace xs = xsimd;
+            v += _pUni->g[0];
+            p = p + _dt * v;
 
-        for (size_t i = 0; i < nSize; ++i) {
-            float vX = pVelX[i];
-            vX += _dt * _pUni->g[0];
-            float pX = pPosX[i];
-            pX += vX * _dt;
-            pPosX[i] = pX;
-            pVelX[i] = vX;
+            p.store_aligned(pPosX);
 
-            xs::batch<float, xs::avx2> a();
-            xs::batch<float, xs::avx2> b = { 2.5f, 3.5f, 4.5f, 5.5f };
-            auto mean = (a + b) / 2;
-            Alignment 
+	    }
+
+        for (size_t i = 0; i < nSize; i += FloatAligment) {
+            //float vX = pVelX[i];
+            //vX += _dt * _pUni->g[0];
+            //float pX = pPosX[i];
+            //pX += vX * _dt;
+            //pPosX[i] = pX;
+            //pVelX[i] = vX;
+
+            // implicit Euler
+
+            xsimd::batch<float, xsimd::avx2> v;
+            v = xsimd::batch<float, xsimd::avx2>::load_aligned(pVelX);
+            xsimd::batch<float, xsimd::avx2> p;
+            p = xsimd::batch<float, xsimd::avx2>::load_aligned(pPosX);
+
+            v += _pUni->g[0];
+            p = p + _dt * v;
+
+            p.store_aligned(pPosX);
+
+            
         }
     }
 
     void NextGen(ptx_generator* _pGen) {
-        
+        T
     }
 };
 

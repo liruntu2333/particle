@@ -19,7 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AlignedStack.h" />
+    <ClInclude Include="AlignedVector.h" />
     <ClInclude Include="ptx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AlignedStack.cpp" />
+    <ClCompile Include="AlignedVector.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
