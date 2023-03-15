@@ -3,10 +3,10 @@
   <ItemGroup>
     <ClInclude Include="ptx.h" />
     <ClInclude Include="AlignedVector.h" />
-    <ClInclude Include="AlignedStack.h" />
+    <ClInclude Include="AlignedStack.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AlignedVector.cpp" />
-    <ClCompile Include="AlignedStack.cpp" />
+    <ClCompile Include="Benchmark.cpp" />
   </ItemGroup>
 </Project>

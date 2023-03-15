@@ -1,8 +1,7 @@
 #ifndef PTX_H
 #define PTX_H
 
-#include "xsimd/xsimd.hpp"
-#include "AlignedVector.h"
+#include "AlignedStack.hpp"
 
 constexpr int FloatAlignment = 4;
 
@@ -37,7 +36,7 @@ struct ptx_soa {
     //float* PositionChunk[3];
     //float* VelocityChunk[3];
     //float* ColorChunk[4];
-    std::array<AlignedVector<float, FloatAlignment>, 3> Position;
+    std::array<AlignedStack<float, FloatAlignment>, 3> Position;
     std::array<AlignedVector<float, FloatAlignment>, 3> Velocity;
     std::array<AlignedVector<float, FloatAlignment>, 3> Color;
 
