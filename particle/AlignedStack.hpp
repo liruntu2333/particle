@@ -1,13 +1,14 @@
 #pragma once
 #include <functional>
 #include <memory>
-#include "../xsimd/xsimd.hpp"
+#include "xsimd.hpp"
 
 template <class T, size_t Capacity, size_t Alignment>
 class AlignedStack
 {
 public:
 	using AlignedAllocator = xsimd::aligned_allocator<T, Alignment>;
+	using type = T;
 
 	AlignedStack();
 	virtual ~AlignedStack();
@@ -18,21 +19,25 @@ public:
 	AlignedStack& operator=(const AlignedStack& other);
 	AlignedStack& operator=(AlignedStack&& other) noexcept;
 
-	void Push(const T& element);
+	void Push(const T& element, size_t index);
 	//void Pop();
 	T* Get(size_t index);
-	size_t Size() const { return m_Size; }
+	T& operator[](size_t index);
 
-	template<class Predicate>
-	size_t EraseIf(Predicate pred);
+	//size_t Size() const { return m_Size; }
+
+	//template<class Predicate>
+	//size_t EraseIf(Predicate pred);
+
+	void Erase(size_t index, size_t cnt);
 
 private:
 	std::unique_ptr<AlignedAllocator> m_Allocator = nullptr;
 	T* m_Data = nullptr;
 
-	size_t m_Size = 0;
+	//size_t m_Size = 0;
 
-	constexpr size_t m_Capacity = Capacity;
+	static constexpr size_t m_Capacity = Capacity;
 };
 
 template <class T, size_t Capacity, size_t Alignment>
@@ -40,7 +45,7 @@ AlignedStack<T, Capacity, Alignment>::AlignedStack()
 {
 	m_Allocator = std::make_unique<AlignedAllocator>();
 	m_Data = m_Allocator->allocate(Capacity);
-	for (int i = 0; i < m_Size; ++i)
+	for (int i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->construct(m_Data + i);
 	}
@@ -49,22 +54,20 @@ AlignedStack<T, Capacity, Alignment>::AlignedStack()
 template <class T, size_t Capacity, size_t Alignment>
 AlignedStack<T, Capacity, Alignment>::~AlignedStack()
 {
-	for (int i = 0; i < m_Size; ++i)
+	for (int i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->destroy(m_Data + i);
 	}
-	m_Allocator->deallocate(m_Data);
+	m_Allocator->deallocate(m_Data, Capacity);
 	m_Data = nullptr;
-	m_Size = 0;
 }
 
 template <class T, size_t Capacity, size_t Alignment>
 AlignedStack<T, Capacity, Alignment>::AlignedStack(const AlignedStack& other) :
-	m_Allocator(std::make_unique<AlignedAllocator>(other.m_Allocator)),
-	m_Size(other.m_Size)
+	m_Allocator(std::make_unique<AlignedAllocator>(other.m_Allocator))
 {
 	m_Data = m_Allocator->allocate(Capacity);
-	for (int i = 0; i < m_Size; ++i)
+	for (int i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->construct(m_Data + i, *(other.m_Data + i));
 	}
@@ -73,12 +76,10 @@ AlignedStack<T, Capacity, Alignment>::AlignedStack(const AlignedStack& other) :
 template <class T, size_t Capacity, size_t Alignment>
 AlignedStack<T, Capacity, Alignment>::AlignedStack(AlignedStack&& other) noexcept :
 	m_Allocator(std::move(other.m_Allocator)),
-	m_Data(other.m_Data),
-	m_Size(other.m_Size)
+	m_Data(other.m_Data)
 {
 	other.m_Allocator = nullptr;
 	other.m_Data = nullptr;
-	other.m_Size = 0;
 }
 
 template <class T, size_t Capacity, size_t Alignment>
@@ -86,14 +87,13 @@ AlignedStack<T, Capacity, Alignment>& AlignedStack<T, Capacity, Alignment>::oper
 {
 	if (this == &other) return *this;
 
-	for (int i = 0; i < m_Size; ++i)
+	for (int i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->destroy(m_Data + i);
 	}
 
 	m_Allocator = std::make_unique<AlignedAllocator>(other.m_Allocator);
-	m_Size = other.m_Size;
-	for (int i = 0; i < m_Size; ++i)
+	for (int i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->construct(m_Data + i, *(other.m_Data + i));
 	}
@@ -106,56 +106,44 @@ AlignedStack<T, Capacity, Alignment>& AlignedStack<T, Capacity, Alignment>::oper
 {
 	if (this == &other) return *this;
 
-	for (int i = 0; i < m_Size; ++i)
+	for (int i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->destroy(m_Data + i);
 	}
-	m_Allocator->deallocate(m_Data);
+	m_Allocator->deallocate(m_Data, m_Capacity);
 
 	m_Allocator = std::move(other.m_Allocator);
 	m_Data = other.m_Data;
-	m_Size = other.m_Size;
 
 	other.m_Data = nullptr;
-	other.m_Size = 0;
 	return *this;
 }
 
 template <class T, size_t Capacity, size_t Alignment>
-void AlignedStack<T, Capacity, Alignment>::Push(const T& element)
+void AlignedStack<T, Capacity, Alignment>::Push(const T& element, std::size_t index)
 {
-	assert((m_Size < m_Capacity) && "capacity not enough");
-	m_Allocator->construct(m_Data + m_Size++, element);
+	assert((index < m_Capacity) && "capacity not enough");
+	m_Allocator->construct(m_Data + index, element);
 }
 
 template <class T, size_t Capacity, size_t Alignment>
 T* AlignedStack<T, Capacity, Alignment>::Get(size_t index)
 {
-	assert((index < m_Size) && "index out of range");
-	return m_Data[index];
-
-	int* p;
+	return m_Data + index;
 }
 
 template <class T, size_t Capacity, size_t Alignment>
-template <class Predicate>
-size_t AlignedStack<T, Capacity, Alignment>::EraseIf(Predicate pred)
+T& AlignedStack<T, Capacity, Alignment>::operator[](size_t index)
 {
-	T* lft = m_Data;
-	T* rht = m_Data;
-	const T* end = m_Data + m_Size;
-	while (rht != end)
+	return *Get(index);
+}
+
+template <class T, size_t Capacity, size_t Alignment>
+void AlignedStack<T, Capacity, Alignment>::Erase(size_t index, size_t cnt)
+{
+	for (int i = 0; i < cnt; ++i)
 	{
-		if (!pred(*lft, *rht))
-			*(lft++) = *rht;
-		++rht;
+		m_Allocator->destroy( m_Data + index + i);
 	}
-	const size_t erasedCount = rht - lft;
-	for (int i = 0; i < erasedCount; ++i)
-	{
-		m_Allocator->destroy(lft + i);
-	}
-	m_Size = lft - m_Data;
-	return erasedCount;
 }
 

@@ -2,11 +2,19 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="ptx.h" />
-    <ClInclude Include="AlignedVector.h" />
     <ClInclude Include="AlignedStack.hpp" />
+    <ClInclude Include="ParticleSOA.h" />
+    <ClInclude Include="ParticleManager.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="ParticleUniforms.h" />
+    <ClInclude Include="ParticleGenerator.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AlignedVector.cpp" />
     <ClCompile Include="Benchmark.cpp" />
+    <ClCompile Include="ParticleSOA.cpp" />
+    <ClCompile Include="ParticleManager.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="ParticleUniforms.cpp" />
+    <ClCompile Include="ParticleGenerator.cpp" />
   </ItemGroup>
 </Project>

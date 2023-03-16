@@ -4,7 +4,12 @@
 #include <stack>
 #include <vector>
 
-#include "../xsimd/xsimd.hpp"
+#include "ParticleGenerator.h"
+#include "ParticleManager.h"
+#include "xsimd.hpp"
+#include "ParticleSOA.h"
+#include "ParticleUniforms.h"
+#include "Timer.h"
 
 using AlignedVector = std::vector<float, xsimd::aligned_allocator<float>>;
 constexpr std::size_t SimdSize = xsimd::simd_type<float>::size;
@@ -89,10 +94,10 @@ void run_arch()
 			res.store_aligned(dataC + i);
 		}
 
-		//for (std::size_t i = vecSize; i < size; ++i)
-		//{
-		//	dataC[i] = (dataA[i] + dataB[i] + dataA[i] + dataB[i]);
-		//}
+		for (std::size_t i = vecSize; i < size; ++i)
+		{
+			dataC[i] = (dataA[i] + dataB[i] + dataA[i] + dataB[i]);
+		}
 	}
 
 	const auto end = std::chrono::high_resolution_clock::now();
@@ -128,6 +133,19 @@ int main()
  //       bres.store_aligned(&res[i]);
  //   }
 
-    BuildVector();
-    run_archlist<xsimd::supported_architectures>::run();
+    //BuildVector();
+    //run_archlist<xsimd::supported_architectures>::run();
+
+	auto particleSoa = std::make_shared<ParticleSOA<1024>>();
+	auto uniforms = std::make_shared<ParticleUniforms>();
+	auto generator = std::make_shared<SimpleGenerator>(4.5f);
+	auto timer = std::make_unique<Timer>();
+	auto manager = std::make_unique<ParticleManager<1024>>(particleSoa, generator);
+
+	while (true)
+	{
+		double dt = timer->Tick();
+
+		manager->Tick(dt, *uniforms);
+	}
 }
