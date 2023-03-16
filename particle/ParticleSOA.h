@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <vector>
 
 #include "AlignedStack.hpp"
@@ -12,7 +13,7 @@ struct ParticleInitialValue
 };
 
 template <std::size_t Capacity>
-class ParticleManager;
+class ParticleSystem;
 
 template <size_t Capacity, size_t Alignment = xsimd::best_arch::alignment()>
 class ParticleSOA
@@ -43,9 +44,11 @@ public:
 
 	template <class Predicate>
 	size_t EraseIf(Predicate pred);
+	
+	void PrintLog();
 
-	friend class ParticleManager<Capacity>;
-
+	friend class ParticleSystem<Capacity>;
+	
 private:
 	Vector3FField m_Position{};
 	Vector3FField m_Velocity{};
@@ -128,12 +131,12 @@ size_t ParticleSOA< Capacity, Alignment>::EraseIf(Predicate pred)
 	{
 		for (auto & arr : container)
 		{
-			arr.Erase(index, cnt);
+			arr.EraseN(index, cnt);
 		}
 	};
 	auto eraseScalar = [](auto& arr, size_t index, size_t cnt)
 	{
-		arr.Erase(index, cnt);
+		arr.EraseN(index, cnt);
 	};
 	eraseVector(m_Position, iLft, erasedCount);
 	eraseVector(m_Velocity, iLft, erasedCount);
@@ -142,4 +145,16 @@ size_t ParticleSOA< Capacity, Alignment>::EraseIf(Predicate pred)
 	eraseScalar(m_MaxLife, iLft, erasedCount);
 	m_Size = iLft;
 	return erasedCount;
+}
+
+template <size_t Capacity, size_t Alignment>
+void ParticleSOA<Capacity, Alignment>::PrintLog()
+{
+	for (size_t i = 0; i < m_Size; ++i)
+	{
+		printf("Particle No. %3d Pos : %2.1f, %2.1f, %2.1f\t", 
+			i, m_Position[0][i], m_Position[1][i], m_Position[2][i]);
+		printf("Life : %2.1f, R: %2.2f, G %2.2f, B %2.2f, A %2.2f\n", 
+			m_Life[i], m_Color[0][i], m_Color[1][i], m_Color[2][i], m_Color[3][i]);
+	}
 }

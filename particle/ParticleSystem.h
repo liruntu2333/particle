@@ -5,18 +5,18 @@
 #include "ParticleGenerator.h"
 
 template <std::size_t Capacity>
-class ParticleManager
+class ParticleSystem
 {
 public:
 	using ParticleBatch = ParticleSOA<Capacity>;
 
-	ParticleManager(const std::shared_ptr<ParticleBatch>& particles, const std::shared_ptr<ParticleGenerator>& generator);
-	~ParticleManager() = default;
+	ParticleSystem(const std::shared_ptr<ParticleBatch>& particles, const std::shared_ptr<ParticleGenerator>& generator);
+	~ParticleSystem() = default;
 
-	ParticleManager(const ParticleManager&) = delete;
-	ParticleManager(ParticleManager&&) = delete;
-	ParticleManager& operator=(const ParticleManager&) = delete;
-	ParticleManager& operator=(ParticleManager&&) = delete;
+	ParticleSystem(const ParticleSystem&) = delete;
+	ParticleSystem(ParticleSystem&&) = delete;
+	ParticleSystem& operator=(const ParticleSystem&) = delete;
+	ParticleSystem& operator=(ParticleSystem&&) = delete;
 
 	void Tick(double dt, const ParticleUniforms& uniforms);
 
@@ -30,6 +30,8 @@ public:
 
 private:
 
+	using floatBatch = xsimd::batch<float, xsimd::best_arch>;
+
 	void UpdateKinetic	(std::shared_ptr<ParticleBatch> particles, double dt, const ParticleUniforms& uniforms);
 	void UpdateLife		(std::shared_ptr<ParticleBatch> particles, double dt);
 	void UpdateColor	(std::shared_ptr<ParticleBatch> particles, const ParticleUniforms& uniforms);
@@ -39,7 +41,7 @@ private:
 };
 
 template <std::size_t Capacity>
-ParticleManager<Capacity>::ParticleManager(
+ParticleSystem<Capacity>::ParticleSystem(
 	const std::shared_ptr<ParticleBatch>& particles,
 	const std::shared_ptr<ParticleGenerator>& generator) :
 	m_Particles(particles), m_Generator(generator)
@@ -47,7 +49,7 @@ ParticleManager<Capacity>::ParticleManager(
 }
 
 template <std::size_t Capacity>
-void ParticleManager<Capacity>::Tick(double dt, const ParticleUniforms& uniforms)
+void ParticleSystem<Capacity>::Tick(double dt, const ParticleUniforms& uniforms)
 {
 	auto particles = m_Particles.lock();
 	if (particles == nullptr) return;
@@ -69,47 +71,41 @@ void ParticleManager<Capacity>::Tick(double dt, const ParticleUniforms& uniforms
 }
 
 template <std::size_t Capacity>
-void ParticleManager<Capacity>::UpdateKinetic(std::shared_ptr<ParticleBatch> particles, double dt, const ParticleUniforms& uniforms)
+void ParticleSystem<Capacity>::UpdateKinetic(std::shared_ptr<ParticleBatch> particles, double dt, const ParticleUniforms& uniforms)
 {
 	const size_t arrLength = particles->Size();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
-
-	using floatBatch = xsimd::batch<float, xsimd::best_arch>;
-
-	auto bDt = floatBatch(dt);
-
+	
 	for (int i = 0; i < 3; ++i)
 	{
-		auto& p = particles->m_Position[i];
-		auto& v = particles->m_Velocity[i];
+		auto& pos = particles->m_Position[i];
+		auto& vel = particles->m_Velocity[i];
 		
 		for (size_t j = 0; j < vecLength; j += floatBatch::size)
 		{
 			// Semi-implicit Euler
-			auto bVel = floatBatch::load_aligned(v.Get(j));
+			auto bVel = floatBatch::load_aligned(vel.Get(j));
 
 			bVel += uniforms.Acceleration[i] * dt;
-			auto bPos = floatBatch::load_aligned(p.Get(j));
-			bPos += bVel * bDt;
-			bPos.store_aligned(p.Get(j));
-			bVel.store_aligned(v.Get(j));
+			auto bPos = floatBatch::load_aligned(pos.Get(j));
+			bPos += bVel * dt;
+			bPos.store_aligned(pos.Get(j));
+			bVel.store_aligned(vel.Get(j));
 		}
 
 		for (size_t j = vecLength; j < arrLength; ++j)
 		{
-			v[j] += uniforms.Acceleration[i] * dt;
-			p[j] += v[j] * dt;
+			vel[j] += uniforms.Acceleration[i] * dt;
+			pos[j] += vel[j] * dt;
 		}
 	}
 }
 
 template <std::size_t Capacity>
-void ParticleManager<Capacity>::UpdateLife(std::shared_ptr<ParticleBatch> particles, double dt)
+void ParticleSystem<Capacity>::UpdateLife(std::shared_ptr<ParticleBatch> particles, double dt)
 {
 	const size_t arrLength = particles->Size();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
-
-	using floatBatch = xsimd::batch<float, xsimd::best_arch>;
 
 	auto& life = particles->m_Life;
 	auto& maxLife = particles->m_MaxLife;
@@ -131,18 +127,16 @@ void ParticleManager<Capacity>::UpdateLife(std::shared_ptr<ParticleBatch> partic
 }
 
 template <std::size_t Capacity>
-void ParticleManager<Capacity>::UpdateColor(std::shared_ptr<ParticleBatch> particles,
+void ParticleSystem<Capacity>::UpdateColor(std::shared_ptr<ParticleBatch> particles,
                                             const ParticleUniforms& uniforms)
 {
 	const size_t arrLength = particles->Size();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
 
-	using floatBatch = xsimd::batch<float, xsimd::best_arch>;
-
 	auto& life = particles->m_Life;
 	auto& maxLife = particles->m_MaxLife;
 
-	std::vector<float> normLife(arrLength);
+	std::vector<float, xsimd::aligned_allocator<float, xsimd::best_arch::alignment()>> normLife(arrLength);
 	// compute normalized life
 	{
 		for (size_t j = 0; j < vecLength; j += floatBatch::size)

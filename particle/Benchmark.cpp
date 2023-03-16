@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "ParticleGenerator.h"
-#include "ParticleManager.h"
+#include "ParticleSystem.h"
 #include "xsimd.hpp"
 #include "ParticleSOA.h"
 #include "ParticleUniforms.h"
@@ -137,15 +137,34 @@ int main()
     //run_archlist<xsimd::supported_architectures>::run();
 
 	auto particleSoa = std::make_shared<ParticleSOA<1024>>();
-	auto uniforms = std::make_shared<ParticleUniforms>();
-	auto generator = std::make_shared<SimpleGenerator>(4.5f);
-	auto timer = std::make_unique<Timer>();
-	auto manager = std::make_unique<ParticleManager<1024>>(particleSoa, generator);
+
+	float a[] = {1.0f, 0.5f, 0.25f };
+	float c[] = {
+		0.6f, -0.5f, 0.25f, 0.124f,
+		0.7f, -0.35f, 0.25f, 2.124f,
+		0.8f, -0.45f, 0.25f, -0.124f,
+		0.5f, -0.65f, 1.25f, 0.124f,
+	};
+	ParticleUniforms uniforms(a, c);
+	auto generator   = std::make_shared<SimpleGenerator>(0.4f);
+	auto timer       = std::make_shared<Timer>();
+	auto manager     = std::make_shared<ParticleSystem<1024>>(particleSoa, generator);
 
 	while (true)
 	{
+		
 		double dt = timer->Tick();
+		manager->Tick(dt, uniforms);
+		
+		static double counter = 0.0;
+#ifdef _DEBUG
+		if ((counter += dt) > 0.2)
+		{
+			system("cls");
+			particleSoa->PrintLog();
+			counter = 0.0;
+		}
 
-		manager->Tick(dt, *uniforms);
+#endif
 	}
 }

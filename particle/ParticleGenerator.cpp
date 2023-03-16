@@ -10,14 +10,15 @@ std::vector<ParticleInitialValue> SimpleGenerator::Generates(double dt)
 	m_Counter += dt;
 	if (m_Counter > m_TimeSpan)
 	{
+		m_Counter = 0.0;
 		ParticleInitialValue value
 		{
 			{0.0f, 0.0f, 0.0f},
 			{0.0f, 0.0f, 0.0f},
 			0.0f,
-			5.0f,
+			4.0f,
 		};
-		return {64, value};
+		return {1, value};
 	}
 	return {};
 }

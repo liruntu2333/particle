@@ -27,7 +27,7 @@
     </ClInclude>
     <ClInclude Include="ParticleUniforms.h" />
     <ClInclude Include="ParticleGenerator.h" />
-    <ClInclude Include="ParticleManager.h" />
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ptx.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -41,7 +41,7 @@
     <ClCompile Include="Benchmark.cpp" />
     <ClCompile Include="ParticleUniforms.cpp" />
     <ClCompile Include="ParticleGenerator.cpp" />
-    <ClCompile Include="ParticleManager.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="ParticleSOA.cpp" />
     <ClCompile Include="Timer.cpp" />
   </ItemGroup>
