@@ -17,14 +17,3 @@ double Timer::Tick()
 	return dt;
 }
 
-
-template <class A, class B>
-class C
-{
-	C();
-};
-
-template <class A, class B>
-C<A, B>::C()
-{
-}

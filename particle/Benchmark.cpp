@@ -1,13 +1,13 @@
 #include <iostream>
 
-#include "ParticleGenerator.h"
+#include "ParticleEmitter.h"
 #include "ParticleSystem.h"
 #include "ParticleSOA.h"
 #include "ParticleUniforms.h"
 #include "Timer.h"
 
-constexpr size_t Capacity = 8192;
-using Architecture = xsimd::default_arch;
+constexpr size_t Capacity = 8196;
+using Architecture = xsimd::avx2;
 
 int main(const char* arg)
 {
@@ -21,22 +21,23 @@ int main(const char* arg)
 		0.8f, -0.45f, 0.25f, -0.124f,
 		0.5f, -0.65f, 1.25f, 0.124f,
 	};
-	ParticleUniforms uniforms(a, c);
-	auto generator = std::make_shared<SimpleGenerator>(0.05);
-	auto timer     = std::make_shared<Timer>();
-	auto manager   = std::make_shared<ParticleSystem<Capacity, Architecture>>(particleSoa, generator);
+
+	const ParticleUniforms uniforms(a, c);
+	auto emitter = std::make_shared<SimpleEmitter>(0.001);
+	auto timer   = std::make_shared<Timer>();
+	auto manager = std::make_shared<ParticleSystem<Capacity, Architecture>>(particleSoa, emitter);
 
 	while (true)
 	{
 		const double dt = timer->Tick();
 		manager->Tick(dt, uniforms);
 		//manager->TickScalar(dt, uniforms);
+		static size_t iterationCount = 0;
+		iterationCount++;
 		
 		static double counter = 0.0;
 
-		static size_t iterationCount = 0;
-		iterationCount++;
-		if ((counter += dt) > 0.5)
+		if ((counter += dt) >= 1.0)
 		{
 			system("cls");
 			std::cout << 
@@ -48,7 +49,7 @@ int main(const char* arg)
 			particleSoa->PrintLog();
 #endif
 
-			counter = 0.0;
+			counter -= 1.0;
 			iterationCount = 0;
 		}
 	}

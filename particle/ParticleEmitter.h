@@ -4,20 +4,20 @@
 
 struct ParticleInitialValue;
 
-class ParticleGenerator
+class ParticleEmitter
 {
 public:
-	ParticleGenerator() = default;
-	virtual ~ParticleGenerator() = default;
+	ParticleEmitter() = default;
+	virtual ~ParticleEmitter() = default;
 
 	virtual std::vector<ParticleInitialValue> Generates(double dt) = 0;
 };
 
-class SimpleGenerator : public ParticleGenerator
+class SimpleEmitter : public ParticleEmitter
 {
 public:
-	explicit SimpleGenerator(double timeSpan);
-	~SimpleGenerator() override = default;
+	explicit SimpleEmitter(double timeSpan);
+	~SimpleEmitter() override = default;
 
 	std::vector<ParticleInitialValue> Generates(double dt) override;
 

@@ -2,7 +2,7 @@
 #include "ParticleSOA.h"
 #include "ParticleUniforms.h"
 
-#include "ParticleGenerator.h"
+#include "ParticleEmitter.h"
 
 template <std::size_t Capacity, class Arch>
 class ParticleSystem
@@ -12,7 +12,7 @@ public:
 	using ParticleBatch = ParticleSOA<Capacity, Arch>;
 	using floatBatch = xsimd::batch<float, Arch>;
 
-	ParticleSystem(const std::shared_ptr<ParticleBatch>& particles, const std::shared_ptr<ParticleGenerator>& generator);
+	ParticleSystem(const std::shared_ptr<ParticleBatch>& particles, const std::shared_ptr<ParticleEmitter>& generator);
 	~ParticleSystem() = default;
 
 	ParticleSystem(const ParticleSystem&) = delete;
@@ -42,14 +42,14 @@ private:
 	void UpdateColorScalar		(std::shared_ptr<ParticleBatch> particles, const ParticleUniforms& uniforms);
 
 	std::weak_ptr<ParticleBatch> m_Particles;
-	std::weak_ptr<ParticleGenerator> m_Generator;
+	std::weak_ptr<ParticleEmitter> m_Emitter;
 };
 
 template <std::size_t Capacity, class Arch>
 ParticleSystem<Capacity, Arch>::ParticleSystem(
 	const std::shared_ptr<ParticleBatch>& particles, 
-	const std::shared_ptr<ParticleGenerator>& generator) :
-	m_Particles(particles), m_Generator(generator)
+	const std::shared_ptr<ParticleEmitter>& generator) :
+	m_Particles(particles), m_Emitter(generator)
 {
 }
 
@@ -58,8 +58,8 @@ void ParticleSystem<Capacity, Arch>::Tick(double dt, const ParticleUniforms& uni
 {
 	auto particles = m_Particles.lock();
 	if (particles == nullptr) return;
-	const auto generator = m_Generator.lock();
-	if (generator == nullptr) return;
+	const auto emitter = m_Emitter.lock();
+	if (emitter == nullptr) return;
 
 	UpdateKinetic(particles, dt, uniforms);
 	UpdateAge(particles, dt);
@@ -68,7 +68,9 @@ void ParticleSystem<Capacity, Arch>::Tick(double dt, const ParticleUniforms& uni
 	particles->EraseIf(LifeTest());
 
 	// add new particles
-	particles->Push(generator->Generates(dt));
+	//if (particles->CAPACITY > particles->Size())
+		particles->Push(emitter->Generates(dt));
+
 	UpdateColor(particles, uniforms);
 }
 
@@ -77,8 +79,8 @@ void ParticleSystem<Capacity, Arch>::TickScalar(double dt, const ParticleUniform
 {
 	auto particles = m_Particles.lock();
 	if (particles == nullptr) return;
-	const auto generator = m_Generator.lock();
-	if (generator == nullptr) return;
+	const auto emitter = m_Emitter.lock();
+	if (emitter == nullptr) return;
 
 	UpdateKineticScalar(particles, dt, uniforms);
 	UpdateAgeScalar(particles, dt);
@@ -87,7 +89,8 @@ void ParticleSystem<Capacity, Arch>::TickScalar(double dt, const ParticleUniform
 	particles->EraseIf(LifeTest());
 
 	// add new particles
-	particles->Push(generator->Generates(dt));
+	//if (particles->CAPACITY > particles->Size())
+		particles->Push(emitter->Generates(dt));
 	UpdateColorScalar(particles, uniforms);
 }
 
