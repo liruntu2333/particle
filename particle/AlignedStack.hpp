@@ -8,7 +8,6 @@ class AlignedStack
 {
 public:
 	using AlignedAllocator = xsimd::aligned_allocator<T, Alignment>;
-	using type = T;
 
 	AlignedStack();
 	virtual ~AlignedStack();
@@ -29,7 +28,7 @@ public:
 	//template<class Predicate>
 	//size_t EraseIf(Predicate pred);
 
-	void Erase(size_t index, size_t cnt);
+	void EraseN(size_t index, size_t cnt);
 
 private:
 	std::unique_ptr<AlignedAllocator> m_Allocator = nullptr;
@@ -139,7 +138,7 @@ T& AlignedStack<T, Capacity, Alignment>::operator[](size_t index)
 }
 
 template <class T, size_t Capacity, size_t Alignment>
-void AlignedStack<T, Capacity, Alignment>::Erase(size_t index, size_t cnt)
+void AlignedStack<T, Capacity, Alignment>::EraseN(size_t index, size_t cnt)
 {
 	for (int i = 0; i < cnt; ++i)
 	{

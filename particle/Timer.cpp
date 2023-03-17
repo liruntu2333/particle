@@ -1,21 +1,30 @@
 #include "Timer.h"
-#include <windows.h>
 
-Timer::Timer()
+Timer::Timer() : m_CurrentTime(std::chrono::steady_clock::now())
 {
-	uint64_t cntPerSec;
-	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&cntPerSec));
-	m_SecondsPerCount = 1.0 / static_cast<double>(cntPerSec);
 }
 
 double Timer::Tick()
 {
-	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&m_CurrentTime));
-	double deltaTime = static_cast<double>(m_CurrentTime - m_PreviousTime) * m_SecondsPerCount;
-	m_PreviousTime = m_CurrentTime;
-	if (deltaTime < 0.0)
+	const auto time = std::chrono::steady_clock::now();
+	const std::chrono::duration<double> diff = time - m_CurrentTime;
+	double dt = diff.count();
+	if (dt < 0.0)
 	{
-		deltaTime = 0.0;
+		dt = 0.0;
 	}
-	return deltaTime;
+	m_CurrentTime = time;
+	return dt;
+}
+
+
+template <class A, class B>
+class C
+{
+	C();
+};
+
+template <class A, class B>
+C<A, B>::C()
+{
 }

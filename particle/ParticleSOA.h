@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <vector>
 
 #include "AlignedStack.hpp"
@@ -11,90 +12,78 @@ struct ParticleInitialValue
 	float MaxLife;
 };
 
-template <std::size_t Capacity>
-class ParticleManager;
+template <std::size_t Capacity, class Arch>
+class ParticleSystem;
 
-template <size_t Capacity, size_t Alignment = xsimd::best_arch::alignment()>
+template <size_t Capacity, class Arch>
 class ParticleSOA
 {
-
 public:
-	using FloatSOA  = AlignedStack<float, Capacity, Alignment>;
-	using IntSOA    = AlignedStack<int, Capacity, Alignment>;
-	using UintSOA   = AlignedStack<uint32_t, Capacity, Alignment>;
-	using DoubleSOA = AlignedStack<double, Capacity, Alignment>;
+
+	static constexpr size_t CAPACITY = Capacity;
+	static constexpr size_t ALIGNMENT = Arch::alignment();
+
+	using FloatSOA  = AlignedStack<float, Capacity, ALIGNMENT>;
+	using IntSOA    = AlignedStack<int, Capacity, ALIGNMENT>;
+	using UintSOA   = AlignedStack<uint32_t, Capacity, ALIGNMENT>;
+	using DoubleSOA = AlignedStack<double, Capacity, ALIGNMENT>;
 
 	using Vector3FField = std::array<FloatSOA, 3>;
 	using Vector4FField = std::array<FloatSOA, 4>;
 	using ScalarFField  = FloatSOA;
 
-	ParticleSOA() = default;
-	virtual ~ParticleSOA() = default;
-
-	ParticleSOA(const ParticleSOA&) = default;
-	ParticleSOA(ParticleSOA&&) = default;
-	ParticleSOA& operator=(const ParticleSOA&) = default;
-	ParticleSOA& operator=(ParticleSOA&&) = default;
-
 	[[nodiscard]] size_t Size() const { return m_Size; }
 
-	void Push(const ParticleInitialValue& particle);
-	void Push(const std::vector<ParticleInitialValue>& particles);
+	bool Push(const ParticleInitialValue& particle);
+	bool Push(const std::vector<ParticleInitialValue>& particles);
 
 	template <class Predicate>
 	size_t EraseIf(Predicate pred);
+	
+	void PrintLog();
 
-	friend class ParticleManager<Capacity>;
-
+	friend class ParticleSystem<Capacity, Arch>;
+	
 private:
 	Vector3FField m_Position{};
 	Vector3FField m_Velocity{};
 	Vector4FField m_Color{};
 
-	ScalarFField m_Life{};
-	ScalarFField m_MaxLife{};
+	ScalarFField m_Age{};
+	ScalarFField m_LifeSpan{};
 
 	size_t m_Size = 0;
-	static constexpr size_t m_Capacity = Capacity;
 };
 
-template <size_t Capacity, size_t Alignment>
-void ParticleSOA<Capacity, Alignment>::Push(const ParticleInitialValue& particle)
+template <size_t Capacity, class Arch>
+bool ParticleSOA<Capacity, Arch>::Push(const ParticleInitialValue& particle)
 {
-	if (m_Capacity <= m_Size)
-		return;
+	if (CAPACITY <= m_Size) return false;
 
 	for (int i = 0; i < 3; ++i)
 	{
 		m_Position[i].Push(particle.Position[i], m_Size);
 		m_Velocity[i].Push(particle.Velocity[i], m_Size);
 	}
-	m_Life.Push(particle.Life);
-	m_MaxLife.Push(particle.MaxLife);
+	m_Age.Push(particle.Life, m_Size);
+	m_LifeSpan.Push(particle.MaxLife, m_Size);
 	++m_Size;
+	return true;
 }
 
-template <size_t Capacity, size_t Alignment>
-void ParticleSOA<Capacity, Alignment>::Push(const std::vector<ParticleInitialValue>& particles)
+template <size_t Capacity, class Arch>
+bool ParticleSOA<Capacity, Arch>::Push(const std::vector<ParticleInitialValue>& particles)
 {
-	for (const auto & initVal : particles)
+	for (const auto & particle : particles)
 	{
-		if (m_Capacity <= m_Size) break;
-
-		for (int i = 0; i < 3; ++i)
-		{
-			m_Position[i].Push(initVal.Position[i], m_Size);
-			m_Velocity[i].Push(initVal.Velocity[i], m_Size);
-		}
-		m_Life.Push(initVal.Life, m_Size);
-		m_MaxLife.Push(initVal.MaxLife, m_Size);
-		++m_Size;
+		if (!Push(particle)) return false;
 	}
+	return true;
 }
 
-template <size_t Capacity, size_t Alignment>
+template <size_t Capacity, class Arch>
 template <class Predicate>
-size_t ParticleSOA< Capacity, Alignment>::EraseIf(Predicate pred)
+size_t ParticleSOA<Capacity, Arch>::EraseIf(Predicate pred)
 {
 	size_t iLft = 0;
 	size_t iRht = 0;
@@ -116,8 +105,8 @@ size_t ParticleSOA< Capacity, Alignment>::EraseIf(Predicate pred)
 			assignVector(m_Position, iLft, iRht);
 			assignVector(m_Velocity, iLft, iRht);
 			assignVector(m_Color, iLft, iRht);
-			assignScalar(m_Life, iLft, iRht);
-			assignScalar(m_MaxLife, iLft, iRht);
+			assignScalar(m_Age, iLft, iRht);
+			assignScalar(m_LifeSpan, iLft, iRht);
 			++iLft;
 		}
 		++iRht;
@@ -128,18 +117,30 @@ size_t ParticleSOA< Capacity, Alignment>::EraseIf(Predicate pred)
 	{
 		for (auto & arr : container)
 		{
-			arr.Erase(index, cnt);
+			arr.EraseN(index, cnt);
 		}
 	};
 	auto eraseScalar = [](auto& arr, size_t index, size_t cnt)
 	{
-		arr.Erase(index, cnt);
+		arr.EraseN(index, cnt);
 	};
 	eraseVector(m_Position, iLft, erasedCount);
 	eraseVector(m_Velocity, iLft, erasedCount);
 	eraseVector(m_Color, iLft, erasedCount);
-	eraseScalar(m_Life, iLft, erasedCount);
-	eraseScalar(m_MaxLife, iLft, erasedCount);
+	eraseScalar(m_Age, iLft, erasedCount);
+	eraseScalar(m_LifeSpan, iLft, erasedCount);
 	m_Size = iLft;
 	return erasedCount;
+}
+
+template <size_t Capacity, class Arch>
+void ParticleSOA<Capacity, Arch>::PrintLog()
+{
+	for (size_t i = 0; i < m_Size; ++i)
+	{
+		printf("Particle No. %3d Pos : %2.1f, %2.1f, %2.1f ", 
+			i, m_Position[0][i], m_Position[1][i], m_Position[2][i]);
+		printf("Age : %2.1f, LifeSpan : %1.1f R: %2.2f, G %2.2f, B %2.2f, A %2.2f\n", 
+			m_Age[i], m_LifeSpan[i], m_Color[0][i], m_Color[1][i], m_Color[2][i], m_Color[3][i]);
+	}
 }

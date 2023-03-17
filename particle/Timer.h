@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include <chrono>
 
 class Timer
 {
@@ -9,8 +9,8 @@ public:
 	double Tick();
 
 private:
-	double m_SecondsPerCount = 0.0;
+	//double m_SecondsPerCount = 0.0;
+	using time_point = std::chrono::time_point<std::chrono::steady_clock>;
 
-	std::uint64_t m_PreviousTime = 0;
-	std::uint64_t m_CurrentTime = 0;
+	time_point m_CurrentTime;
 };
