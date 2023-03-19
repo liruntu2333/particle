@@ -1,13 +1,13 @@
 #include <iostream>
 
 #include "ParticleEmitter.h"
-#include "ParticleSystem.h"
+#include "ParticleSystemCPU.h"
 #include "ParticleSOA.h"
 #include "ParticleUniforms.h"
 #include "Timer.h"
 
 constexpr size_t Capacity = 8196;
-using Architecture = xsimd::avx2;
+using Architecture = xsimd::best_arch;
 
 int main(const char* arg)
 {
@@ -22,15 +22,16 @@ int main(const char* arg)
 		0.5f, -0.65f, 1.25f, 0.124f,
 	};
 
-	const ParticleUniforms uniforms(a, c);
-	auto emitter = std::make_shared<SimpleEmitter>(0.001);
-	auto timer   = std::make_shared<Timer>();
-	auto manager = std::make_shared<ParticleSystem<Capacity, Architecture>>(particleSoa, emitter);
+	std::shared_ptr<ParticleUniforms> uniforms = std::make_shared<ParticleUniforms>(a, c);
+	std::shared_ptr<ParticleEmitter> emitter = std::make_shared<SimpleEmitter>(0.001);
+	std::shared_ptr<Timer> timer = std::make_shared<Timer>();
+	std::shared_ptr<ParticleSystem> particleSystem = std::make_shared<ParticleSystemCPU<
+		Capacity, Architecture>>(particleSoa, emitter, uniforms);
 
 	while (true)
 	{
 		const double dt = timer->Tick();
-		manager->Tick(dt, uniforms);
+		particleSystem->TickLogic(dt);
 		//manager->TickScalar(dt, uniforms);
 		static size_t iterationCount = 0;
 		iterationCount++;

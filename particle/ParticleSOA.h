@@ -13,7 +13,7 @@ struct ParticleInitialValue
 };
 
 template <std::size_t Capacity, class Arch>
-class ParticleSystem;
+class ParticleSystemCPU;
 
 template <size_t Capacity, class Arch>
 class ParticleSOA
@@ -42,7 +42,7 @@ public:
 	
 	void PrintLog();
 
-	friend class ParticleSystem<Capacity, Arch>;
+	friend class ParticleSystemCPU<Capacity, Arch>;
 	
 private:
 	Vector3FField m_Position{};

@@ -4,15 +4,16 @@
     <ClInclude Include="ptx.h" />
     <ClInclude Include="AlignedStack.hpp" />
     <ClInclude Include="ParticleSOA.h" />
-    <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="ParticleSystemCPU.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="ParticleUniforms.h" />
     <ClInclude Include="ParticleEmitter.h" />
+    <ClInclude Include="ParticleSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Benchmark.cpp" />
     <ClCompile Include="ParticleSOA.cpp" />
-    <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="ParticleSystemCPU.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="ParticleUniforms.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />

@@ -25,9 +25,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ParticleUniforms.h" />
     <ClInclude Include="ParticleEmitter.h" />
-    <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="ParticleSystemCPU.h" />
     <ClInclude Include="ptx.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -41,7 +42,7 @@
     <ClCompile Include="Benchmark.cpp" />
     <ClCompile Include="ParticleUniforms.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />
-    <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="ParticleSystemCPU.cpp" />
     <ClCompile Include="ParticleSOA.cpp" />
     <ClCompile Include="RunTest.cpp" />
     <ClCompile Include="Timer.cpp" />
