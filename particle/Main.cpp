@@ -15,7 +15,7 @@
 #include "imgui_impl_win32.h"
 
 constexpr size_t Capacity = 8196;
-using Architecture = xsimd::default_arch;
+using Architecture = xsimd::avx2;
 
 // Data
 static ID3D11Device*            g_pd3dDevice = NULL;
@@ -26,7 +26,6 @@ static ID3D11RenderTargetView*  g_mainRenderTargetView = NULL;
 static std::shared_ptr<ParticleSOA<Capacity, Architecture>> g_ParticleSoa = nullptr;
 static std::shared_ptr<ParticleUniforms>                    g_ParticleUniforms = nullptr;
 static std::shared_ptr<ParticleEmitter>                     g_ParticleEmitter = nullptr;
-static std::shared_ptr<Timer>                               g_Timer = nullptr;
 static std::shared_ptr<ParticleSystem>                      g_ParticleSystem = nullptr;
 
 // Forward declarations of helper functions
@@ -107,20 +106,22 @@ int main(int, char**)
 
         // tick particle system
         {
-	        g_Timer->Tick();
-	        g_ParticleSystem->TickLogic(io.DeltaTime);
-	        
-	        //if (const auto cpuParticle = 
-	        //	std::dynamic_pointer_cast<ParticleSystemCPU<Capacity, Architecture>>(g_ParticleSystem))
-	        //	cpuParticle->TickLogicScalar(io.DeltaTime);
-
-            const double elapsed = g_Timer->Tick();
-
-            static int cnt = 1;
-            static double timeSum = elapsed;
+        	static int cnt = 0;
+            static double timeSum = 0.0;
             static double timeAvg = 0.0;
-            timeSum += elapsed;
-	        if (++cnt >= 200)
+
+        	auto start = std::chrono::steady_clock::now();
+        	{
+	            g_ParticleSystem->TickLogic(io.DeltaTime);
+	            //if (const auto cpuParticle =
+		           // std::dynamic_pointer_cast<ParticleSystemCPU<Capacity, Architecture>>(g_ParticleSystem))
+		           // cpuParticle->TickLogicScalar(io.DeltaTime);
+        	}
+            auto end = std::chrono::steady_clock::now();
+            const std::chrono::duration<double> elapsed = end - start;
+            timeSum += elapsed.count();
+
+	        if (++cnt > 100)
 	        {
                 timeAvg = timeSum / static_cast<double>(cnt);
                 timeSum = 0.0;
@@ -227,7 +228,6 @@ void InitiateParticleSystem()
 
 	g_ParticleUniforms = std::make_shared<ParticleUniforms>(a, c);
 	g_ParticleEmitter = std::make_shared<SimpleEmitter>(0.001);
-	g_Timer = std::make_shared<Timer>();
 	g_ParticleSystem = std::make_shared<ParticleSystemCPU<Capacity, Architecture>>
 		(g_ParticleSoa, g_ParticleEmitter, g_ParticleUniforms);
 }

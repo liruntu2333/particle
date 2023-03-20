@@ -18,7 +18,7 @@ std::vector<ParticleInitialValue> SimpleEmitter::Generates(double dt)
 			0.0f,
 			4.0f,
 		};
-		return {20, value};
+		return {27, value};
 	}
 	return {};
 }
