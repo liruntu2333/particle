@@ -9,13 +9,30 @@
     <ClInclude Include="ParticleUniforms.h" />
     <ClInclude Include="ParticleEmitter.h" />
     <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="imgui_impl_dx11.h">
+      <Filter>ImguiBackend</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_win32.h">
+      <Filter>ImguiBackend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Benchmark.cpp" />
+    <ClCompile Include="Main.cpp" />
     <ClCompile Include="ParticleSOA.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="ParticleUniforms.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />
     <ClCompile Include="RunTest.cpp" />
+    <ClCompile Include="imgui_impl_win32.cpp">
+      <Filter>ImguiBackend</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_dx11.cpp">
+      <Filter>ImguiBackend</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ImguiBackend">
+      <UniqueIdentifier>{025ba54a-7355-4664-a36f-82806cfa611b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

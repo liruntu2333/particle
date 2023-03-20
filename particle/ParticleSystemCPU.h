@@ -26,7 +26,7 @@ public:
 	ParticleSystemCPU& operator=(ParticleSystemCPU&&) = delete;
 
 	void TickLogic(double dt) override;
-	void TickScalar(double dt);
+	void TickLogicScalar(double dt);
 
 	void TickRender(double dt) override {}
 
@@ -86,7 +86,7 @@ void ParticleSystemCPU<Capacity, Arch>::TickLogic(double dt)
 }
 
 template <std::size_t Capacity, class Arch>
-void ParticleSystemCPU<Capacity, Arch>::TickScalar(double dt)
+void ParticleSystemCPU<Capacity, Arch>::TickLogicScalar(double dt)
 {
 	auto particles = m_Particles.lock();
 	if (particles == nullptr) return;
@@ -226,8 +226,8 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateKineticScalar(std::shared_ptr<Part
 		
 		for (size_t j = 0; j < size; j++)
 		{
-			vel[j] += uniforms.Acceleration[i] * dt;
-			pos[j] += vel[j] * dt;
+			vel[j] += uniforms.Acceleration[i] * static_cast<float>(dt);
+			pos[j] += vel[j] * static_cast<float>(dt);
 		}
 	}
 }
@@ -242,7 +242,7 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateAgeScalar(std::shared_ptr<Particle
 	{
 		for (size_t j = 0; j < size; ++j)
 		{
-			age[j] += dt;
+			age[j] += static_cast<float>(dt);
 		}
 	}
 }
