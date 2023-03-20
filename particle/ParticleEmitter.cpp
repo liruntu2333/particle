@@ -7,10 +7,10 @@ SimpleEmitter::SimpleEmitter(double timeSpan) : m_TimeSpan(timeSpan)
 
 std::vector<ParticleInitialValue> SimpleEmitter::Generates(double dt)
 {
-	m_Counter += dt;
-	if (m_Counter >= m_TimeSpan)
+	//m_Counter += dt;
+	//if (m_Counter >= m_TimeSpan)
 	{
-		m_Counter -= m_TimeSpan;
+		//m_Counter -= m_TimeSpan;
 		ParticleInitialValue value
 		{
 			{0.0f, 0.0f, 0.0f},
@@ -18,7 +18,7 @@ std::vector<ParticleInitialValue> SimpleEmitter::Generates(double dt)
 			0.0f,
 			4.0f,
 		};
-		return {10, value};
+		return {20, value};
 	}
 	return {};
 }

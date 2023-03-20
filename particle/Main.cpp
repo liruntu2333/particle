@@ -3,19 +3,21 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #include "ParticleEmitter.h"
-#include "ParticleSystemCPU.h"
 #include "ParticleSOA.h"
+#include "ParticleSystemCPU.h"
 #include "ParticleUniforms.h"
 #include "Timer.h"
+
+
+#include <d3d11.h>
+#include <tchar.h>
+#include "imgui.h"
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
 
 constexpr size_t Capacity = 8196;
 using Architecture = xsimd::default_arch;
 
-#include "imgui.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx11.h"
-#include <d3d11.h>
-#include <tchar.h>
 
 // Data
 static ID3D11Device*            g_pd3dDevice = NULL;
@@ -107,30 +109,31 @@ int main(int, char**)
 
         // tick particle system
         {
-	        const double dt = g_Timer->Tick();
-	        g_ParticleSystem->TickLogic(dt);
-	        //if (const auto cpuParticle = 
-	        //	std::dynamic_pointer_cast<ParticleSystemCPU<Capacity, Architecture>>(particleSystem))
-	        //	cpuParticle->TickLogicScalar(dt);
-	        static size_t iterationCount = 0;
-            ++iterationCount;
-	        static double average = 0.0;
-	        if (static double elapsed = 0.0; (elapsed += dt) > 1.0)
+	        g_Timer->Tick();
+	        //g_ParticleSystem->TickLogic(io.DeltaTime);
+	        
+	        if (const auto cpuParticle = 
+	        	std::dynamic_pointer_cast<ParticleSystemCPU<Capacity, Architecture>>(g_ParticleSystem))
+	        	cpuParticle->TickLogicScalar(io.DeltaTime);
+
+            const double elapsed = g_Timer->Tick();
+
+            static int cnt = 1;
+            static double timeSum = elapsed;
+            static double timeAvg = 0.0;
+            timeSum += elapsed;
+	        if (++cnt >= 100)
 	        {
-		        average = 1000.0 * elapsed / static_cast<double>(iterationCount);
-                iterationCount = 0;
-                elapsed = 0.0;
+                timeAvg = timeSum / static_cast<double>(cnt);
+                timeSum = 0.0;
+                cnt = 0;
 	        }
 
         	ImGui::Begin("Particle System CPU");
-            ImGui::Text("Architecture : %s  Particle Count : %zu Time per Iteration : %3.3f ms",
-				Architecture::name(), g_ParticleSoa->Size(), average);
+            ImGui::Text("Architecture : %s  Particle Count : %zu Time per Iteration : %3.3f ms, dt = %3.3f",
+				Architecture::name(), g_ParticleSoa->Size(), timeAvg * 1000.0, io.DeltaTime * 1000.0f);
             ImGui::End();
         }
-
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
 
         // Rendering
         ImGui::Render();

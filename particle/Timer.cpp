@@ -1,12 +1,12 @@
 #include "Timer.h"
 
-Timer::Timer() : m_CurrentTime(std::chrono::steady_clock::now())
+Timer::Timer() : m_CurrentTime(std::chrono::high_resolution_clock::now())
 {
 }
 
 double Timer::Tick()
 {
-	const auto time = std::chrono::steady_clock::now();
+	const auto time = std::chrono::high_resolution_clock::now();
 	const std::chrono::duration<double> diff = time - m_CurrentTime;
 	double dt = diff.count();
 	if (dt < 0.0)
