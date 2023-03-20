@@ -10,7 +10,7 @@ public:
 
 private:
 	//double m_SecondsPerCount = 0.0;
-	using time_point = std::chrono::time_point<std::chrono::high_resolution_clock>;
+	using time_point = std::chrono::time_point<std::chrono::steady_clock>;
 
 	time_point m_CurrentTime;
 };

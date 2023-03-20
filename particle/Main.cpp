@@ -8,7 +8,6 @@
 #include "ParticleUniforms.h"
 #include "Timer.h"
 
-
 #include <d3d11.h>
 #include <tchar.h>
 #include "imgui.h"
@@ -17,7 +16,6 @@
 
 constexpr size_t Capacity = 8196;
 using Architecture = xsimd::default_arch;
-
 
 // Data
 static ID3D11Device*            g_pd3dDevice = NULL;
@@ -47,7 +45,7 @@ int main(int, char**)
     //ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, L"ImGui Example", NULL };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX11 Example", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Particle Editor", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -110,11 +108,11 @@ int main(int, char**)
         // tick particle system
         {
 	        g_Timer->Tick();
-	        //g_ParticleSystem->TickLogic(io.DeltaTime);
+	        g_ParticleSystem->TickLogic(io.DeltaTime);
 	        
-	        if (const auto cpuParticle = 
-	        	std::dynamic_pointer_cast<ParticleSystemCPU<Capacity, Architecture>>(g_ParticleSystem))
-	        	cpuParticle->TickLogicScalar(io.DeltaTime);
+	        //if (const auto cpuParticle = 
+	        //	std::dynamic_pointer_cast<ParticleSystemCPU<Capacity, Architecture>>(g_ParticleSystem))
+	        //	cpuParticle->TickLogicScalar(io.DeltaTime);
 
             const double elapsed = g_Timer->Tick();
 
@@ -122,7 +120,7 @@ int main(int, char**)
             static double timeSum = elapsed;
             static double timeAvg = 0.0;
             timeSum += elapsed;
-	        if (++cnt >= 100)
+	        if (++cnt >= 200)
 	        {
                 timeAvg = timeSum / static_cast<double>(cnt);
                 timeSum = 0.0;
@@ -130,8 +128,8 @@ int main(int, char**)
 	        }
 
         	ImGui::Begin("Particle System CPU");
-            ImGui::Text("Architecture : %s  Particle Count : %zu Time per Iteration : %3.3f ms, dt = %3.3f",
-				Architecture::name(), g_ParticleSoa->Size(), timeAvg * 1000.0, io.DeltaTime * 1000.0f);
+            ImGui::Text("Architecture : %s  Particle Count : %zu Time per Iteration : %3.1f us",
+				Architecture::name(), g_ParticleSoa->Size(), timeAvg * 1000000.0);
             ImGui::End();
         }
 
