@@ -6,8 +6,10 @@
 #include "ParticleUniforms.h"
 #include "Timer.h"
 
+#include <imgui.h>
+
 constexpr size_t Capacity = 8196;
-using Architecture = xsimd::best_arch;
+using Architecture = xsimd::default_arch;
 
 int main(const char* arg)
 {
@@ -32,13 +34,11 @@ int main(const char* arg)
 	{
 		const double dt = timer->Tick();
 		particleSystem->TickLogic(dt);
-		//manager->TickScalar(dt, uniforms);
+		//particleSystem->TickScalar(dt, uniforms);
 		static size_t iterationCount = 0;
 		iterationCount++;
-		
-		static double counter = 0.0;
 
-		if ((counter += dt) >= 1.0)
+		if (static double counter = 0.0; (counter += dt) >= 1.0)
 		{
 			system("cls");
 			std::cout << 

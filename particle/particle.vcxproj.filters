@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClCompile Include="Benchmark.cpp" />
     <ClCompile Include="ParticleSOA.cpp" />
-    <ClCompile Include="ParticleSystemCPU.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="ParticleUniforms.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />

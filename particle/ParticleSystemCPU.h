@@ -123,17 +123,17 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateKinetic(std::shared_ptr<ParticleBa
 			// Semi-implicit Euler
 			auto bVel = FloatBatch::load_aligned(vel.Get(j));
 
-			bVel += uniforms.Acceleration[i] * dt;
+			bVel += uniforms.Acceleration[i] * static_cast<float>(dt);
 			auto bPos = FloatBatch::load_aligned(pos.Get(j));
-			bPos += bVel * dt;
+			bPos += bVel * static_cast<float>(dt);
 			bPos.store_aligned(pos.Get(j));
 			bVel.store_aligned(vel.Get(j));
 		}
 
 		for (size_t j = vecLength; j < arrLength; ++j)
 		{
-			vel[j] += uniforms.Acceleration[i] * dt;
-			pos[j] += vel[j] * dt;
+			vel[j] += uniforms.Acceleration[i] * static_cast<float>(dt);
+			pos[j] += vel[j] * static_cast<float>(dt);
 		}
 	}
 }
@@ -151,13 +151,13 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateAge(std::shared_ptr<ParticleBatch>
 	for (size_t j = 0; j < vecLength; j += FloatBatch::size)
 	{
 		auto bAge = FloatBatch::load_aligned(age.Get(j));
-		bAge += dt;
+		bAge += static_cast<float>(dt);
 		bAge.store_aligned(age.Get(j));
 	}
 
 	for (size_t j = vecLength; j < arrLength; ++j)
 	{
-		age[j] += dt;
+		age[j] += static_cast<float>(dt);
 	}
 }
 
@@ -171,7 +171,7 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateColor(std::shared_ptr<ParticleBatc
 	auto& age = particles->m_Age;
 	auto& span = particles->m_LifeSpan;
 
-	std::vector<float, xsimd::aligned_allocator<float, xsimd::best_arch::alignment()>> normLife(arrLength);
+	std::vector<float, xsimd::aligned_allocator<float, Arch::alignment()>> normLife(arrLength);
 	// compute normalized age
 	for (size_t j = 0; j < vecLength; j += FloatBatch::size)
 	{

@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
 #include <memory>
-#include "xsimd.hpp"
+#include <xsimd/xsimd.hpp>
 
 template <class T, size_t Capacity, size_t Alignment>
 class AlignedStack
@@ -44,7 +44,7 @@ AlignedStack<T, Capacity, Alignment>::AlignedStack()
 {
 	m_Allocator = std::make_unique<AlignedAllocator>();
 	m_Data = m_Allocator->allocate(Capacity);
-	for (int i = 0; i < Capacity; ++i)
+	for (size_t i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->construct(m_Data + i);
 	}
@@ -53,7 +53,7 @@ AlignedStack<T, Capacity, Alignment>::AlignedStack()
 template <class T, size_t Capacity, size_t Alignment>
 AlignedStack<T, Capacity, Alignment>::~AlignedStack()
 {
-	for (int i = 0; i < Capacity; ++i)
+	for (size_t i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->destroy(m_Data + i);
 	}
@@ -66,7 +66,7 @@ AlignedStack<T, Capacity, Alignment>::AlignedStack(const AlignedStack& other) :
 	m_Allocator(std::make_unique<AlignedAllocator>(other.m_Allocator))
 {
 	m_Data = m_Allocator->allocate(Capacity);
-	for (int i = 0; i < Capacity; ++i)
+	for (size_t i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->construct(m_Data + i, *(other.m_Data + i));
 	}
@@ -86,13 +86,13 @@ AlignedStack<T, Capacity, Alignment>& AlignedStack<T, Capacity, Alignment>::oper
 {
 	if (this == &other) return *this;
 
-	for (int i = 0; i < Capacity; ++i)
+	for (size_t i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->destroy(m_Data + i);
 	}
 
 	m_Allocator = std::make_unique<AlignedAllocator>(other.m_Allocator);
-	for (int i = 0; i < Capacity; ++i)
+	for (size_t i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->construct(m_Data + i, *(other.m_Data + i));
 	}
@@ -105,7 +105,7 @@ AlignedStack<T, Capacity, Alignment>& AlignedStack<T, Capacity, Alignment>::oper
 {
 	if (this == &other) return *this;
 
-	for (int i = 0; i < Capacity; ++i)
+	for (size_t i = 0; i < Capacity; ++i)
 	{
 		m_Allocator->destroy(m_Data + i);
 	}
@@ -140,7 +140,7 @@ T& AlignedStack<T, Capacity, Alignment>::operator[](size_t index)
 template <class T, size_t Capacity, size_t Alignment>
 void AlignedStack<T, Capacity, Alignment>::EraseN(size_t index, size_t cnt)
 {
-	for (int i = 0; i < cnt; ++i)
+	for (size_t i = 0; i < cnt; ++i)
 	{
 		m_Allocator->destroy( m_Data + index + i);
 	}

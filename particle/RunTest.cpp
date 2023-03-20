@@ -1,7 +1,7 @@
 #include <chrono>
 #include <iostream>
 #include <vector>
-#include <xsimd.hpp>
+#include <xsimd/xsimd.hpp>
 
 using AlignedVector = std::vector<float, xsimd::aligned_allocator<float>>;
 constexpr std::size_t SimdSize = xsimd::simd_type<float>::size;

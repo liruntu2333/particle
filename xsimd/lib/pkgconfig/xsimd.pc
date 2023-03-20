@@ -1,8 +1,0 @@
-prefix=C:/Users/lizizhen/source/repos/Particle/ThirdClass/xsimd
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include
-
-Name: xsimd
-Description: xsimd provides a unified means for using SIMD features for library authors..
-Version: 10.0.0
-Cflags: -I${includedir}
