@@ -5,6 +5,6 @@ class ParticleSystem
 public:
 	virtual ~ParticleSystem() = default;
 
-	virtual void TickLogic(double dt) = 0;
-	virtual void TickRender(double dt) = 0; 
+	virtual void TickLogic(float dt) = 0;
+	virtual void TickRender(float dt) = 0; 
 };

@@ -230,7 +230,7 @@ void InitiateParticleSystem()
 	};
 
 	g_ParticleUniforms = std::make_shared<ParticleUniforms>(a, c);
-	g_ParticleEmitter = std::make_shared<SimpleEmitter>(0.001);
+	g_ParticleEmitter = std::make_shared<SimpleEmitter>(0.001f);
 	g_ParticleSystem = std::make_shared<ParticleSystemCPU<Capacity, Architecture>>
 		(g_ParticleSoa, g_ParticleEmitter, g_ParticleUniforms);
 }

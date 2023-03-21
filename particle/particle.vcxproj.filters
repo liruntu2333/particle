@@ -17,6 +17,10 @@
     </ClInclude>
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="FileSelection.h" />
+    <ClInclude Include="D3DHelper.h" />
+    <ClInclude Include="StructuredBuffer.h" />
+    <ClInclude Include="StructWithFlag.h" />
+    <ClInclude Include="Texture2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -32,10 +36,22 @@
       <Filter>ImguiBackend</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Texture2D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImguiBackend">
       <UniqueIdentifier>{025ba54a-7355-4664-a36f-82806cfa611b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{bbc87476-050d-4345-b09c-1e287c0af2df}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shader\CpuParticleVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="CpuParticlePS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

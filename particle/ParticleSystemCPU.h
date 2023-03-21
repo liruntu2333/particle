@@ -14,9 +14,9 @@ public:
 	using FloatBatch = xsimd::batch<float, Arch>;
 
 	ParticleSystemCPU(
-		const std::shared_ptr<ParticleBatch>& particles, 
-		const std::shared_ptr<ParticleEmitter>& generator, 
-		const std::shared_ptr<ParticleUniforms>& uniforms);
+		std::shared_ptr<ParticleBatch> particles,
+		std::shared_ptr<ParticleEmitter> generator,
+		std::shared_ptr<ParticleUniforms> uniforms);
 	
 	~ParticleSystemCPU() override = default;
 
@@ -25,10 +25,10 @@ public:
 	ParticleSystemCPU& operator=(const ParticleSystemCPU&) = delete;
 	ParticleSystemCPU& operator=(ParticleSystemCPU&&) = delete;
 
-	void TickLogic(double dt) override;
-	void TickLogicScalar(double dt);
+	void TickLogic(float dt) override;
+	void TickLogicScalar(float dt);
 
-	void TickRender(double dt) override {}
+	void TickRender(float dt) override {}
 
 	struct LifeTest
 	{
@@ -40,75 +40,61 @@ public:
 
 private:
 
-	void UpdateKinetic	(std::shared_ptr<ParticleBatch> particles, double dt, const ParticleUniforms& uniforms);
-	void UpdateAge		(std::shared_ptr<ParticleBatch> particles, double dt);
+	void UpdateKinetic	(std::shared_ptr<ParticleBatch> particles, float dt, const ParticleUniforms& uniforms);
+	void UpdateAge		(std::shared_ptr<ParticleBatch> particles, float dt);
 	void UpdateColor	(std::shared_ptr<ParticleBatch> particles, const ParticleUniforms& uniforms);
 
-	void UpdateKineticScalar	(std::shared_ptr<ParticleBatch> particles, double dt, const ParticleUniforms& uniforms);
-	void UpdateAgeScalar		(std::shared_ptr<ParticleBatch> particles, double dt);
+	void UpdateKineticScalar	(std::shared_ptr<ParticleBatch> particles, float dt, const ParticleUniforms& uniforms);
+	void UpdateAgeScalar		(std::shared_ptr<ParticleBatch> particles, float dt);
 	void UpdateColorScalar		(std::shared_ptr<ParticleBatch> particles, const ParticleUniforms& uniforms);
 
-	std::weak_ptr<ParticleBatch> m_Particles;
-	std::weak_ptr<ParticleEmitter> m_Emitter;
-	std::weak_ptr<ParticleUniforms> m_Uniforms;
+	std::shared_ptr<ParticleBatch> m_Particles;
+	std::shared_ptr<ParticleEmitter> m_Emitter;
+	std::shared_ptr<ParticleUniforms> m_Uniforms;
 };
 
 template <std::size_t Capacity, class Arch>
 ParticleSystemCPU<Capacity, Arch>::ParticleSystemCPU(
-	const std::shared_ptr<ParticleBatch>& particles, 
-	const std::shared_ptr<ParticleEmitter>& generator,
-	const std::shared_ptr<ParticleUniforms>& uniforms) :
-	m_Particles(particles), m_Emitter(generator), m_Uniforms(uniforms)
+	std::shared_ptr<ParticleBatch> particles,
+	std::shared_ptr<ParticleEmitter> generator,
+	std::shared_ptr<ParticleUniforms> uniforms) :
+	m_Particles(std::move(particles)), m_Emitter(std::move(generator)), m_Uniforms(std::move(uniforms))
 {
 }
 
 template <std::size_t Capacity, class Arch>
-void ParticleSystemCPU<Capacity, Arch>::TickLogic(double dt)
+void ParticleSystemCPU<Capacity, Arch>::TickLogic(float dt)
 {
-	auto particles = m_Particles.lock();
-	if (particles == nullptr) return;
-	const auto emitter = m_Emitter.lock();
-	if (emitter == nullptr) return;
-	const auto uniforms = m_Uniforms.lock();
-	if (uniforms == nullptr) return;
-
-	UpdateKinetic(particles, dt, *uniforms);
-	UpdateAge(particles, dt);
+	UpdateKinetic(m_Particles, dt, *m_Uniforms);
+	UpdateAge(m_Particles, dt);
 
 	// life test
-	particles->EraseIf(LifeTest());
+	m_Particles->EraseIf(LifeTest());
 
 	// add new particles
 	//if (particles->CAPACITY > particles->Size())
-		particles->Push(emitter->Generates(dt));
+		m_Particles->Push(m_Emitter->Generates(dt));
 
-	UpdateColor(particles, *uniforms);
+	UpdateColor(m_Particles, *m_Uniforms);
 }
 
 template <std::size_t Capacity, class Arch>
-void ParticleSystemCPU<Capacity, Arch>::TickLogicScalar(double dt)
+void ParticleSystemCPU<Capacity, Arch>::TickLogicScalar(float dt)
 {
-	auto particles = m_Particles.lock();
-	if (particles == nullptr) return;
-	const auto emitter = m_Emitter.lock();
-	if (emitter == nullptr) return;
-	const auto uniforms = m_Uniforms.lock();
-	if (uniforms == nullptr) return;
-
-	UpdateKineticScalar(particles, dt, *uniforms);
-	UpdateAgeScalar(particles, dt);
+	UpdateKineticScalar(m_Particles, dt, *m_Uniforms);
+	UpdateAgeScalar(m_Particles, dt);
 
 	// life test
-	particles->EraseIf(LifeTest());
+	m_Particles->EraseIf(LifeTest());
 
 	// add new particles
 	//if (particles->CAPACITY > particles->Size())
-		particles->Push(emitter->Generates(dt));
-	UpdateColorScalar(particles, *uniforms);
+		m_Particles->Push(m_Emitter->Generates(dt));
+	UpdateColorScalar(m_Particles, *m_Uniforms);
 }
 
 template <std::size_t Capacity, class Arch>
-void ParticleSystemCPU<Capacity, Arch>::UpdateKinetic(std::shared_ptr<ParticleBatch> particles, double dt, const ParticleUniforms& uniforms)
+void ParticleSystemCPU<Capacity, Arch>::UpdateKinetic(std::shared_ptr<ParticleBatch> particles, float dt, const ParticleUniforms& uniforms)
 {
 	const size_t arrLength = particles->Size();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
@@ -123,23 +109,23 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateKinetic(std::shared_ptr<ParticleBa
 			// Semi-implicit Euler
 			auto bVel = FloatBatch::load_aligned(vel.Get(j));
 
-			bVel += uniforms.Acceleration[i] * static_cast<float>(dt);
+			bVel += uniforms.Acceleration[i] * dt;
 			auto bPos = FloatBatch::load_aligned(pos.Get(j));
-			bPos += bVel * static_cast<float>(dt);
+			bPos += bVel * dt;
 			bPos.store_aligned(pos.Get(j));
 			bVel.store_aligned(vel.Get(j));
 		}
 
 		for (size_t j = vecLength; j < arrLength; ++j)
 		{
-			vel[j] += uniforms.Acceleration[i] * static_cast<float>(dt);
-			pos[j] += vel[j] * static_cast<float>(dt);
+			vel[j] += uniforms.Acceleration[i] * dt;
+			pos[j] += vel[j] * dt;
 		}
 	}
 }
 
 template <std::size_t Capacity, class Arch>
-void ParticleSystemCPU<Capacity, Arch>::UpdateAge(std::shared_ptr<ParticleBatch> particles, double dt)
+void ParticleSystemCPU<Capacity, Arch>::UpdateAge(std::shared_ptr<ParticleBatch> particles, float dt)
 {
 	const size_t arrLength = particles->Size();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
@@ -151,13 +137,13 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateAge(std::shared_ptr<ParticleBatch>
 	for (size_t j = 0; j < vecLength; j += FloatBatch::size)
 	{
 		auto bAge = FloatBatch::load_aligned(age.Get(j));
-		bAge += static_cast<float>(dt);
+		bAge += dt;
 		bAge.store_aligned(age.Get(j));
 	}
 
 	for (size_t j = vecLength; j < arrLength; ++j)
 	{
-		age[j] += static_cast<float>(dt);
+		age[j] += dt;
 	}
 }
 
@@ -215,8 +201,8 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateColor(std::shared_ptr<ParticleBatc
 }
 
 template <std::size_t Capacity, class Arch>
-void ParticleSystemCPU<Capacity, Arch>::UpdateKineticScalar(std::shared_ptr<ParticleBatch> particles, double dt,
-	const ParticleUniforms& uniforms)
+void ParticleSystemCPU<Capacity, Arch>::UpdateKineticScalar(std::shared_ptr<ParticleBatch> particles, float dt,
+                                                            const ParticleUniforms& uniforms)
 {
 	const auto size = particles->Size();
 	for (int i = 0; i < 3; ++i)
@@ -226,14 +212,14 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateKineticScalar(std::shared_ptr<Part
 		
 		for (size_t j = 0; j < size; j++)
 		{
-			vel[j] += uniforms.Acceleration[i] * static_cast<float>(dt);
-			pos[j] += vel[j] * static_cast<float>(dt);
+			vel[j] += uniforms.Acceleration[i] * dt;
+			pos[j] += vel[j] * dt;
 		}
 	}
 }
 
 template <std::size_t Capacity, class Arch>
-void ParticleSystemCPU<Capacity, Arch>::UpdateAgeScalar(std::shared_ptr<ParticleBatch> particles, double dt)
+void ParticleSystemCPU<Capacity, Arch>::UpdateAgeScalar(std::shared_ptr<ParticleBatch> particles, float dt)
 {
 	auto& age = particles->m_Age;
 	auto& span = particles->m_LifeSpan;
@@ -242,7 +228,7 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateAgeScalar(std::shared_ptr<Particle
 	{
 		for (size_t j = 0; j < size; ++j)
 		{
-			age[j] += static_cast<float>(dt);
+			age[j] += dt;
 		}
 	}
 }

@@ -10,19 +10,19 @@ public:
 	ParticleEmitter() = default;
 	virtual ~ParticleEmitter() = default;
 
-	virtual std::vector<ParticleInitialValue> Generates(double dt) = 0;
+	virtual std::vector<ParticleInitialValue> Generates(float dt) = 0;
 };
 
 class SimpleEmitter : public ParticleEmitter
 {
 public:
-	explicit SimpleEmitter(double timeSpan);
+	explicit SimpleEmitter(float timeSpan);
 	~SimpleEmitter() override = default;
 
-	std::vector<ParticleInitialValue> Generates(double dt) override;
+	std::vector<ParticleInitialValue> Generates(float dt) override;
 
 private:
-	double m_Counter = 0.0;
-	const double m_TimeSpan = 0.0;
+	float m_Counter = 0.0;
+	const float m_TimeSpan = 0.0;
 };
 

@@ -1,12 +1,16 @@
 #pragma once
 #include <d3d11.h>
-#include <string>
+#include <memory>
 #include <vector>
 #include <wrl/client.h>
-#include <unordered_map>
 #include "FileSelection.h"
+#include <directxtk/SimpleMath.h>
+#include <directxtk/BufferHelpers.h>
+#include "StructuredBuffer.h"
+#include "Texture2D.h"
 
 using Microsoft::WRL::ComPtr;
+using namespace DirectX::SimpleMath;
 
 class Renderer
 {
@@ -26,8 +30,20 @@ public:
 class BillboardRenderer : public Renderer
 {
 public:
+	struct PassConstants
+	{
+		Matrix View;
+		Matrix Proj;
+		Vector3 EyePosition;
+		float DeltaTime{};
 
-	BillboardRenderer(ID3D11Device* device);
+		PassConstants() = default;
+	};
+
+	BillboardRenderer(ID3D11Device* device, UINT capacity,
+		const std::shared_ptr<FileSelection>& paths,
+		const std::shared_ptr<StructWithFlag<PassConstants>>& constants);
+
 	~BillboardRenderer() override;
 
 	void Initialize() override;
@@ -35,20 +51,20 @@ public:
 
 private:
 
-	using ResourceVec = std::vector<ComPtr<ID3D11Resource>>;
-	using SrvVec = std::vector<ComPtr<ID3D11ShaderResourceView>>;
-	using TextureMap = std::vector<std::tuple<
-		std::wstring, ComPtr<ID3D11Resource>, ComPtr<ID3D11ShaderResourceView>>>;
+	//StructArray m_ConstantBuffers{};
+	DirectX::ConstantBuffer<PassConstants> m_ConstantBuffer;
+	std::vector<DirectX::StructuredBuffer<float>> m_FieldBuffers{};
 
-	ResourceVec m_ConstantBuffers{};
-	SrvVec m_ConstantViews{};
-	ResourceVec m_InstanceBuffers{};
-	SrvVec m_InstanceSrvs{};
+	std::list<std::pair<std::wstring, DirectX::Texture2D>> m_TextureArray{};
+	std::shared_ptr<FileSelection> m_TexturePaths{};
+	std::shared_ptr<StructWithFlag<PassConstants>> m_Constants{};
 
-	TextureMap m_Map{};
-	std::weak_ptr<FileSelection> m_Textures{};
-
+	ComPtr<ID3D11InputLayout> m_InputLayout{};
 	ComPtr<ID3D11VertexShader> m_Vs{};
 	ComPtr<ID3D11PixelShader> m_Ps{};
+	ComPtr<ID3D11Buffer> m_IndexBuffer{};
+
 	ID3D11Device* m_Device = nullptr;
+	const UINT m_Capacity;
 };
+
