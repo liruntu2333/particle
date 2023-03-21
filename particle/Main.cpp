@@ -2,11 +2,13 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
+#include <chrono>
+
 #include "ParticleEmitter.h"
 #include "ParticleSOA.h"
 #include "ParticleSystemCPU.h"
 #include "ParticleUniforms.h"
-#include "Timer.h"
+#include "Texture2D.h"
 
 #include <d3d11.h>
 #include <tchar.h>
@@ -22,6 +24,7 @@ static ID3D11Device*            g_pd3dDevice = NULL;
 static ID3D11DeviceContext*     g_pd3dDeviceContext = NULL;
 static IDXGISwapChain*          g_pSwapChain = NULL;
 static ID3D11RenderTargetView*  g_mainRenderTargetView = NULL;
+static std::shared_ptr<DirectX::Texture2D> g_depthStencil = nullptr;
 
 static std::shared_ptr<ParticleSOA<Capacity, Architecture>> g_ParticleSoa = nullptr;
 static std::shared_ptr<ParticleUniforms>                    g_ParticleUniforms = nullptr;
@@ -137,12 +140,16 @@ int main(int, char**)
         // Rendering
         ImGui::Render();
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-        g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
-        g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+        g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, g_depthStencil->GetDsv());
+    	g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+        g_pd3dDeviceContext->ClearDepthStencilView(g_depthStencil->GetDsv(),
+                                                   D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+        {
+            g_pd3dDeviceContext->de
+        }
 
-
-        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
         g_pSwapChain->Present(1, 0); // Present with vsync
         //g_pSwapChain->Present(0, 0); // Present without vsync
@@ -176,13 +183,15 @@ bool CreateDeviceD3D(HWND hWnd)
     sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.OutputWindow = hWnd;
-    sd.SampleDesc.Count = 4;
+    sd.SampleDesc.Count = 1;
     sd.SampleDesc.Quality = 0;
     sd.Windowed = TRUE;
     sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
     UINT createDeviceFlags = 0;
-    //createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#ifdef _DEBUG
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
     D3D_FEATURE_LEVEL featureLevel;
     const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
     HRESULT res = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
@@ -208,7 +217,17 @@ void CreateRenderTarget()
     ID3D11Texture2D* pBackBuffer;
     g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
     g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
-    pBackBuffer->Release();
+
+	D3D11_TEXTURE2D_DESC backBufferDesc;
+	pBackBuffer->GetDesc(&backBufferDesc);
+    CD3D11_TEXTURE2D_DESC depthStencilDesc(DXGI_FORMAT_D32_FLOAT,
+        backBufferDesc.Width, backBufferDesc.Height, 1, 0, D3D11_BIND_DEPTH_STENCIL,
+        D3D11_USAGE_DEFAULT);
+	g_depthStencil = std::make_shared<DirectX::Texture2D>(g_pd3dDevice,
+        depthStencilDesc);
+	g_depthStencil->CreateViews(g_pd3dDevice);
+	
+	pBackBuffer->Release();
 }
 
 void CleanupRenderTarget()

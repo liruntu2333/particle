@@ -4,7 +4,7 @@
 using namespace DirectX;
 static std::unique_ptr<CommonStates> g_States = nullptr;
 
-constexpr int StructuredBufferCount = 7;
+constexpr int FieldBufferCount = 7;
 
 BillboardRenderer::BillboardRenderer(ID3D11Device* device, UINT capacity,
 		const std::shared_ptr<FileSelection>& paths,
@@ -27,7 +27,7 @@ void BillboardRenderer::Initialize()
 	m_Constants->SetDirty();
 
 	// t0~6, space 0
-	for (int i = 0; i < StructuredBufferCount; ++i)
+	for (int i = 0; i < FieldBufferCount; ++i)
 		m_FieldBuffers.emplace_back(m_Device, m_Capacity);
 
 	// t0 ~ , space 1
@@ -71,5 +71,34 @@ void BillboardRenderer::Initialize()
 
 void BillboardRenderer::Render(ID3D11DeviceContext* context)
 {
+	unsigned int stride = 0;
+	unsigned int offset = 0;
+	context->IASetInputLayout(m_InputLayout.Get());
+	context->IASetVertexBuffers(0, 0, nullptr, &stride, &offset);
+	context->IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	context->VSSetShader(m_Vs.Get(), nullptr, 0);
+	auto cb0 = m_ConstantBuffer.GetBuffer();
+	context->VSSetConstantBuffers(0, 1, &cb0);
+	std::vector<ID3D11ShaderResourceView*> srvs;
+	for (const auto & field : m_FieldBuffers)
+		srvs.emplace_back(field.GetSrv());
+	context->VSSetShaderResources(0, srvs.size(), srvs.data());
+
+	context->PSSetShader(m_Ps.Get(), nullptr, 0);
+	auto linearWrap = g_States->LinearWrap();
+	context->PSSetSamplers(0, 1, &linearWrap);
+	srvs.clear();
+	for (const auto & [path, resource] : m_TextureArray)
+		srvs.emplace_back(resource.GetSrv());
+	context->PSSetShaderResources(0, srvs.size(), srvs.data());
+
+	auto alphaBlend = g_States->AlphaBlend();
+	context->OMSetBlendState(alphaBlend, nullptr, 0xffffffff);
+	auto depthTest = g_States->DepthDefault();
+	context->OMSetDepthStencilState(depthTest, 0);
+
+	// TODO
+	//context->DrawIndexed();
 }

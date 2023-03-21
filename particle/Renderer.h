@@ -40,14 +40,17 @@ public:
 		PassConstants() = default;
 	};
 
+	using ConstBuffer = StructWithFlag<PassConstants>;
+	
 	BillboardRenderer(ID3D11Device* device, UINT capacity,
 		const std::shared_ptr<FileSelection>& paths,
-		const std::shared_ptr<StructWithFlag<PassConstants>>& constants);
+		const std::shared_ptr<ConstBuffer>& constants);
 
 	~BillboardRenderer() override;
 
 	void Initialize() override;
 	void Render(ID3D11DeviceContext* context) override;
+	void UpdateGpuResource(size_t count);
 
 private:
 
