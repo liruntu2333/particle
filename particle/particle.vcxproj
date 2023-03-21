@@ -25,8 +25,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="FileSelection.h" />
     <ClInclude Include="imgui_impl_dx11.h" />
     <ClInclude Include="imgui_impl_win32.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ParticleUniforms.h" />
     <ClInclude Include="ParticleEmitter.h" />
@@ -44,6 +46,7 @@
     <ClCompile Include="imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui_impl_win32.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ParticleUniforms.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />
     <ClCompile Include="ParticleSOA.cpp" />

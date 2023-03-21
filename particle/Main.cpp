@@ -139,6 +139,9 @@ int main(int, char**)
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
         g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
         g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+
+
+
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
         g_pSwapChain->Present(1, 0); // Present with vsync
@@ -173,7 +176,7 @@ bool CreateDeviceD3D(HWND hWnd)
     sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.OutputWindow = hWnd;
-    sd.SampleDesc.Count = 1;
+    sd.SampleDesc.Count = 4;
     sd.SampleDesc.Quality = 0;
     sd.Windowed = TRUE;
     sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
