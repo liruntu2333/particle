@@ -77,7 +77,7 @@ void BillboardRenderer::Initialize()
 	// index buffer
 	assert(m_Capacity * 6 < UINT16_MAX);
 	std::vector<UINT16> vertices(m_Capacity * 6);
-	for (size_t i = 0; i < m_Capacity; ++i)
+	for (UINT i = 0; i < m_Capacity; ++i)
 	{
 		vertices[i * 6 + 0] = 4 * i + 0;
 		vertices[i * 6 + 1] = 4 * i + 1;
@@ -98,21 +98,26 @@ void BillboardRenderer::Render(ID3D11DeviceContext* context, UINT count)
 
 	const auto cb0 = m_ConstantBuffer.GetBuffer();
 	context->VSSetConstantBuffers(0, 1, &cb0);
+	
+	//{
+	//	const auto opaque = g_States->Opaque();
+	//	context->OMSetBlendState(opaque, nullptr, 0xffffffff);
+	//	const auto depthWrite = g_States->DepthDefault();
+	//	context->OMSetDepthStencilState(depthWrite, 0);
+	//	context->RSSetState(g_States->CullCounterClockwise());
+	//	context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R16_UINT, 0);
+	//	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//	context->VSSetShader(g_DummyVS.Get(), nullptr, 0);
+	//	context->PSSetShader(g_DummyPS.Get(), nullptr, 0);
+	//	context->Draw(6, 0);
+	//}
 
 	const auto alphaBlend = g_States->AlphaBlend();
 	context->OMSetBlendState(alphaBlend, nullptr, 0xffffffff);
 	const auto depthTest = g_States->DepthRead();
 	context->OMSetDepthStencilState(depthTest, 0);
-	context->RSSetState(g_States->CullCounterClockwise());
-
-	{
-		context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R16_UINT, 0);
-		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		context->VSSetShader(g_DummyVS.Get(), nullptr, 0);
-		context->PSSetShader(g_DummyPS.Get(), nullptr, 0);
-		context->Draw(6, 0);
-	}
+	context->RSSetState(g_States->Wireframe());
+	
 	context->IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -133,6 +138,7 @@ void BillboardRenderer::Render(ID3D11DeviceContext* context, UINT count)
 
 	context->DrawIndexed(count * 6, 0, 0);
 	//context->Draw(count * 6, 0);
+	//context->Draw(count, 0);
 }
 
 void BillboardRenderer::UpdateGpuResource(const ParticleRenderData& data, ID3D11DeviceContext* context)

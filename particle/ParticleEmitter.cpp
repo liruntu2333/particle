@@ -8,18 +8,16 @@ SimpleEmitter::SimpleEmitter(float timeSpan) : m_TimeSpan(timeSpan)
 std::vector<ParticleInitialValue> SimpleEmitter::Generates(float dt)
 {
 	m_Counter += dt;
-	if (m_Counter >= m_TimeSpan)
+	std::vector<ParticleInitialValue> v;
+	auto cnt = static_cast<unsigned>(m_Counter / m_TimeSpan);
+	m_Counter -= static_cast<float>(cnt) * m_TimeSpan;
+	constexpr auto value = ParticleInitialValue
 	{
-		m_Counter -= m_TimeSpan;
-		ParticleInitialValue value
-		{
-			{0.0f, 0.0f, 0.0f},
-			{10.0f, .0f, 0.0f},
-			{20.0f, 20.0f},
-			0.0f,
-			4.0f,
-		};
-		return {1, value};
-	}
-	return {};
+		{0.0f, 0.0f, 0.0f},
+		{10.0f, .0f, 0.0f},
+		{20.0f, 20.0f},
+		0.0f,
+		4.0f,
+	};
+	return {cnt, value};
 }

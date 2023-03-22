@@ -252,7 +252,7 @@ void InitiateParticleSystem(ImGuiIO& io)
     g_PassConstant->ViewProj = (view * proj).Transpose();
 
     g_FilePaths = std::make_shared<FileSelection>();
-    g_FilePaths->emplace_back(L"./texture/doge.png");
+    g_FilePaths->emplace_back(L"./texture/OIP-C.jpg");
 
     g_BbRenderer = std::make_shared<BillboardRenderer>(g_pd3dDevice, Capacity, g_FilePaths, g_PassConstant);
     g_BbRenderer->Initialize();
@@ -262,10 +262,10 @@ void InitiateParticleSystem(ImGuiIO& io)
 	float a[] = {0.0f, -9.8f, 0.0f };
 	float c[] = 
 	{
-		0.6f, -0.5f, 0.25f, 0.124f,
-		0.7f, -0.35f, 0.25f, 2.124f,
-		0.8f, -0.45f, 0.25f, -0.124f,
-		0.5f, -0.65f, 1.25f, 0.124f,
+		0.3f, -0.5f, 0.75f, 0.124f,
+		0.3f, -0.35f, 0.25f, 2.124f,
+		0.3f, -0.45f, 0.5f, -0.124f,
+		0.3f, -0.65f, 1.25f, -0.424f,
 	};
 
 	g_ParticleUniforms = std::make_shared<ParticleUniforms>(a, c);

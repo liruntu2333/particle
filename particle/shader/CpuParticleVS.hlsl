@@ -26,13 +26,13 @@ struct VertexOut
 
 static const float2 offset[] =
 {
-	float2(+1.0f, -1.0f),
-	float2(+1.0f, +1.0f),
-	float2(-1.0f, -1.0f),
-	float2(-1.0f, +1.0f),
+	float2(+0.5f, -0.5f),
+	float2(+0.5f, +0.5f),
+	float2(-0.5f, -0.5f),
+	float2(-0.5f, +0.5f),
 };
 
-static const float2 tex[] =
+static const float2 texCoord[] =
 {
 	float2(0.0f, 0.0f),
 	float2(1.0f, 0.0f),
@@ -54,13 +54,10 @@ VertexOut main(uint vertexId : SV_VertexID)
 	const float3 X = normalize(cross(float3(0.0f, 1.0f, 0.0f), Z));
 	const float3 Y = normalize(cross(Z, X));
 
-	const float halfW = 0.5f * size.x;
-	const float halfH = 0.5f * size.y;
-
-	const float4 v = float4(center + offset[j].x * halfW * X + offset[j].y * halfH * Y, 1.0f);
+	const float4 v = float4(center + offset[j].x * size.x * X + offset[j].y * size.y * Y, 1.0f);
 
 	vout.PositionH = mul(v, g_ViewProj);
-	vout.TexCoord = tex[j];
+	vout.TexCoord = texCoord[j];
 	vout.Color = color;
 	vout.TextureId = i % 5;
 
