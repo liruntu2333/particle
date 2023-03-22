@@ -5,6 +5,8 @@
 #include "ParticleEmitter.h"
 #include "ParticleUniforms.h"
 
+#include "BillboardRenderer.h"
+
 template <std::size_t Capacity, class Arch>
 class ParticleSystemCPU : public ParticleSystem
 {
@@ -16,7 +18,8 @@ public:
 	ParticleSystemCPU(
 		std::shared_ptr<ParticleBatch> particles,
 		std::shared_ptr<ParticleEmitter> generator,
-		std::shared_ptr<ParticleUniforms> uniforms);
+		std::shared_ptr<ParticleUniforms> uniforms,
+		std::shared_ptr<BillboardRenderer> renderer);
 	
 	~ParticleSystemCPU() override = default;
 
@@ -28,7 +31,7 @@ public:
 	void TickLogic(float dt) override;
 	void TickLogicScalar(float dt);
 
-	void TickRender(float dt) override {}
+	void TickRender(ID3D11DeviceContext* context) override;
 
 	struct LifeTest
 	{
@@ -48,17 +51,22 @@ private:
 	void UpdateAgeScalar		(std::shared_ptr<ParticleBatch> particles, float dt);
 	void UpdateColorScalar		(std::shared_ptr<ParticleBatch> particles, const ParticleUniforms& uniforms);
 
+	BillboardRenderer::ParticleRenderData GetRenderData();
+
 	std::shared_ptr<ParticleBatch> m_Particles;
 	std::shared_ptr<ParticleEmitter> m_Emitter;
 	std::shared_ptr<ParticleUniforms> m_Uniforms;
+	std::shared_ptr<BillboardRenderer> m_Renderer;
 };
 
 template <std::size_t Capacity, class Arch>
 ParticleSystemCPU<Capacity, Arch>::ParticleSystemCPU(
 	std::shared_ptr<ParticleBatch> particles,
 	std::shared_ptr<ParticleEmitter> generator,
-	std::shared_ptr<ParticleUniforms> uniforms) :
-	m_Particles(std::move(particles)), m_Emitter(std::move(generator)), m_Uniforms(std::move(uniforms))
+	std::shared_ptr<ParticleUniforms> uniforms,
+	std::shared_ptr<BillboardRenderer> renderer) :
+	m_Particles(std::move(particles)), m_Emitter(std::move(generator)), m_Uniforms(std::move(uniforms)),
+	m_Renderer(std::move(renderer))
 {
 }
 
@@ -72,7 +80,7 @@ void ParticleSystemCPU<Capacity, Arch>::TickLogic(float dt)
 	m_Particles->EraseIf(LifeTest());
 
 	// add new particles
-	//if (particles->CAPACITY > particles->Size())
+	//if (particles->CAPACITY > particles->Count())
 		m_Particles->Push(m_Emitter->Generates(dt));
 
 	UpdateColor(m_Particles, *m_Uniforms);
@@ -88,15 +96,22 @@ void ParticleSystemCPU<Capacity, Arch>::TickLogicScalar(float dt)
 	m_Particles->EraseIf(LifeTest());
 
 	// add new particles
-	//if (particles->CAPACITY > particles->Size())
+	//if (particles->CAPACITY > particles->Count())
 		m_Particles->Push(m_Emitter->Generates(dt));
 	UpdateColorScalar(m_Particles, *m_Uniforms);
 }
 
 template <std::size_t Capacity, class Arch>
+void ParticleSystemCPU<Capacity, Arch>::TickRender(ID3D11DeviceContext* context)
+{
+	m_Renderer->UpdateGpuResource(GetRenderData(), context);
+	m_Renderer->Render(context, m_Particles->Count());
+}
+
+template <std::size_t Capacity, class Arch>
 void ParticleSystemCPU<Capacity, Arch>::UpdateKinetic(std::shared_ptr<ParticleBatch> particles, float dt, const ParticleUniforms& uniforms)
 {
-	const size_t arrLength = particles->Size();
+	const size_t arrLength = particles->Count();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
 	
 	for (int i = 0; i < 3; ++i)
@@ -127,7 +142,7 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateKinetic(std::shared_ptr<ParticleBa
 template <std::size_t Capacity, class Arch>
 void ParticleSystemCPU<Capacity, Arch>::UpdateAge(std::shared_ptr<ParticleBatch> particles, float dt)
 {
-	const size_t arrLength = particles->Size();
+	const size_t arrLength = particles->Count();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
 
 	auto& age = particles->m_Age;
@@ -151,7 +166,7 @@ template <std::size_t Capacity, class Arch>
 void ParticleSystemCPU<Capacity, Arch>::UpdateColor(std::shared_ptr<ParticleBatch> particles,
                                             const ParticleUniforms& uniforms)
 {
-	const size_t arrLength = particles->Size();
+	const size_t arrLength = particles->Count();
 	const size_t vecLength = arrLength - arrLength % xsimd::simd_type<float>::size;
 
 	auto& age = particles->m_Age;
@@ -204,7 +219,7 @@ template <std::size_t Capacity, class Arch>
 void ParticleSystemCPU<Capacity, Arch>::UpdateKineticScalar(std::shared_ptr<ParticleBatch> particles, float dt,
                                                             const ParticleUniforms& uniforms)
 {
-	const auto size = particles->Size();
+	const auto size = particles->Count();
 	for (int i = 0; i < 3; ++i)
 	{
 		auto& pos = particles->m_Position[i];
@@ -223,7 +238,7 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateAgeScalar(std::shared_ptr<Particle
 {
 	auto& age = particles->m_Age;
 	auto& span = particles->m_LifeSpan;
-	const auto size = particles->Size();
+	const auto size = particles->Count();
 	// update life
 	{
 		for (size_t j = 0; j < size; ++j)
@@ -237,7 +252,7 @@ template <std::size_t Capacity, class Arch>
 void ParticleSystemCPU<Capacity, Arch>::UpdateColorScalar(std::shared_ptr<ParticleBatch> particles,
 	const ParticleUniforms& uniforms)
 {
-	const size_t size = particles->Size();
+	const size_t size = particles->Count();
 	auto& age = particles->m_Age;
 	auto& span = particles->m_LifeSpan;
 
@@ -265,5 +280,19 @@ void ParticleSystemCPU<Capacity, Arch>::UpdateColorScalar(std::shared_ptr<Partic
 			color[j] = col;
 		}
 	}
+}
+
+template <std::size_t Capacity, class Arch>
+BillboardRenderer::ParticleRenderData ParticleSystemCPU<Capacity, Arch>::GetRenderData()
+{
+	auto& pos = m_Particles->m_Position;
+	auto& col = m_Particles->m_Color;
+	auto& size = m_Particles->m_Size;
+	auto cnt = m_Particles->Count();
+	return{{pos[0].m_Data, pos[1].m_Data, pos[2].m_Data ,
+		col[0].m_Data, col[1].m_Data, col[2].m_Data, col[3].m_Data ,
+		size[0].m_Data, size[1].m_Data },
+		cnt
+	};
 }
 

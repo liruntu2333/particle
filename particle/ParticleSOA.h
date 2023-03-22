@@ -8,6 +8,7 @@ struct ParticleInitialValue
 {
 	float Position[3];
 	float Velocity[3];
+	float Size[2];
 	float Life;
 	float MaxLife;
 };
@@ -28,11 +29,12 @@ public:
 	using UintSOA   = AlignedStack<uint32_t, Capacity, ALIGNMENT>;
 	using DoubleSOA = AlignedStack<double, Capacity, ALIGNMENT>;
 
+	using Vector2FField = std::array<FloatSOA, 2>;
 	using Vector3FField = std::array<FloatSOA, 3>;
 	using Vector4FField = std::array<FloatSOA, 4>;
 	using ScalarFField  = FloatSOA;
 
-	[[nodiscard]] size_t Size() const { return m_Size; }
+	[[nodiscard]] size_t Count() const { return m_Count; }
 
 	bool Push(const ParticleInitialValue& particle);
 	bool Push(const std::vector<ParticleInitialValue>& particles);
@@ -48,26 +50,29 @@ private:
 	Vector3FField m_Position{};
 	Vector3FField m_Velocity{};
 	Vector4FField m_Color{};
+	Vector2FField m_Size{};
 
 	ScalarFField m_Age{};
 	ScalarFField m_LifeSpan{};
 
-	size_t m_Size = 0;
+	size_t m_Count = 0;
 };
 
 template <size_t Capacity, class Arch>
 bool ParticleSOA<Capacity, Arch>::Push(const ParticleInitialValue& particle)
 {
-	if (CAPACITY <= m_Size) return false;
+	if (CAPACITY <= m_Count) return false;
 
 	for (int i = 0; i < 3; ++i)
 	{
-		m_Position[i].Push(particle.Position[i], m_Size);
-		m_Velocity[i].Push(particle.Velocity[i], m_Size);
+		m_Position[i].Push(particle.Position[i], m_Count);
+		m_Velocity[i].Push(particle.Velocity[i], m_Count);
 	}
-	m_Age.Push(particle.Life, m_Size);
-	m_LifeSpan.Push(particle.MaxLife, m_Size);
-	++m_Size;
+	m_Age.Push(particle.Life, m_Count);
+	m_LifeSpan.Push(particle.MaxLife, m_Count);
+	m_Size[0].Push(particle.Size[0], m_Count);
+	m_Size[1].Push(particle.Size[1], m_Count);
+	++m_Count;
 	return true;
 }
 
@@ -87,7 +92,7 @@ size_t ParticleSOA<Capacity, Arch>::EraseIf(Predicate pred)
 {
 	size_t iLft = 0;
 	size_t iRht = 0;
-	while (iRht < m_Size)
+	while (iRht < m_Count)
 	{
 		if (!pred(this, iRht))
 		{
@@ -105,6 +110,7 @@ size_t ParticleSOA<Capacity, Arch>::EraseIf(Predicate pred)
 			assignVector(m_Position, iLft, iRht);
 			assignVector(m_Velocity, iLft, iRht);
 			assignVector(m_Color, iLft, iRht);
+			assignVector(m_Size, iLft, iRht);
 			assignScalar(m_Age, iLft, iRht);
 			assignScalar(m_LifeSpan, iLft, iRht);
 			++iLft;
@@ -127,16 +133,17 @@ size_t ParticleSOA<Capacity, Arch>::EraseIf(Predicate pred)
 	eraseVector(m_Position, iLft, erasedCount);
 	eraseVector(m_Velocity, iLft, erasedCount);
 	eraseVector(m_Color, iLft, erasedCount);
+	eraseVector(m_Size, iLft, erasedCount);
 	eraseScalar(m_Age, iLft, erasedCount);
 	eraseScalar(m_LifeSpan, iLft, erasedCount);
-	m_Size = iLft;
+	m_Count = iLft;
 	return erasedCount;
 }
 
 template <size_t Capacity, class Arch>
 void ParticleSOA<Capacity, Arch>::PrintLog()
 {
-	for (size_t i = 0; i < m_Size; ++i)
+	for (size_t i = 0; i < m_Count; ++i)
 	{
 		printf("Particle No. %3d Pos : %2.1f, %2.1f, %2.1f ", 
 			i, m_Position[0][i], m_Position[1][i], m_Position[2][i]);

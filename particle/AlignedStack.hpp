@@ -4,9 +4,8 @@
 #include <xsimd/xsimd.hpp>
 
 template <class T, size_t Capacity, size_t Alignment>
-class AlignedStack
+struct AlignedStack
 {
-public:
 	using AlignedAllocator = xsimd::aligned_allocator<T, Alignment>;
 
 	AlignedStack();
@@ -23,18 +22,17 @@ public:
 	T* Get(size_t index);
 	T& operator[](size_t index);
 
-	//size_t Size() const { return m_Size; }
+	//size_t Count() const { return m_Count; }
 
 	//template<class Predicate>
 	//size_t EraseIf(Predicate pred);
 
 	void EraseN(size_t index, size_t cnt);
 
-private:
 	std::unique_ptr<AlignedAllocator> m_Allocator = nullptr;
 	T* m_Data = nullptr;
 
-	//size_t m_Size = 0;
+	//size_t m_Count = 0;
 
 	static constexpr size_t m_Capacity = Capacity;
 };

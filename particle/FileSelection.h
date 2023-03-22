@@ -3,4 +3,4 @@
 #include <string>
 #include "StructWithFlag.h"
 
-using FileSelection = StructWithFlag<std::vector<std::wstring>>;
+using FileSelection = /*StructWithFlag<*/std::vector<std::wstring>/*>*/;

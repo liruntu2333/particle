@@ -18,18 +18,26 @@
 
 constexpr size_t Capacity = 8196;
 using Architecture = xsimd::avx2;
+constexpr float Pi = 3.141592654f;
 
 // Data
 static ID3D11Device*            g_pd3dDevice = NULL;
 static ID3D11DeviceContext*     g_pd3dDeviceContext = NULL;
 static IDXGISwapChain*          g_pSwapChain = NULL;
 static ID3D11RenderTargetView*  g_mainRenderTargetView = NULL;
-static std::shared_ptr<DirectX::Texture2D> g_depthStencil = nullptr;
 
-static std::shared_ptr<ParticleSOA<Capacity, Architecture>> g_ParticleSoa = nullptr;
-static std::shared_ptr<ParticleUniforms>                    g_ParticleUniforms = nullptr;
-static std::shared_ptr<ParticleEmitter>                     g_ParticleEmitter = nullptr;
-static std::shared_ptr<ParticleSystem>                      g_ParticleSystem = nullptr;
+namespace
+{
+	std::shared_ptr<DirectX::Texture2D> g_depthStencil = nullptr;
+
+	std::shared_ptr<ParticleSOA<Capacity, Architecture>> g_ParticleSoa = nullptr;
+	std::shared_ptr<ParticleUniforms>                    g_ParticleUniforms = nullptr;
+	std::shared_ptr<ParticleEmitter>                     g_ParticleEmitter = nullptr;
+	std::shared_ptr<ParticleSystem>                      g_ParticleSystem = nullptr;
+	std::shared_ptr<BillboardRenderer::PassConstants>    g_PassConstant = nullptr;
+	std::shared_ptr<FileSelection>                       g_FilePaths = nullptr;
+	std::shared_ptr<BillboardRenderer>                   g_BbRenderer = nullptr;
+}
 
 // Forward declarations of helper functions
 bool CreateDeviceD3D(HWND hWnd);
@@ -37,7 +45,8 @@ void CleanupDeviceD3D();
 void CreateRenderTarget();
 void CleanupRenderTarget();
 
-void InitiateParticleSystem();
+void InitiateParticleSystem(ImGuiIO& io);
+
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Main code
@@ -75,7 +84,6 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
-
     // Load Fonts
 
     // Our state
@@ -83,7 +91,7 @@ int main(int, char**)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    InitiateParticleSystem();
+    InitiateParticleSystem(io);
 
     // Main loop
     bool done = false;
@@ -133,7 +141,7 @@ int main(int, char**)
 
         	ImGui::Begin("Particle System CPU");
             ImGui::Text("Architecture : %s  Particle Count : %zu Time per Iteration : %3.1f us",
-				Architecture::name(), g_ParticleSoa->Size(), timeAvg * 1000000.0);
+				Architecture::name(), g_ParticleSoa->Count(), timeAvg * 1000000.0);
             ImGui::End();
         }
 
@@ -145,11 +153,9 @@ int main(int, char**)
         g_pd3dDeviceContext->ClearDepthStencilView(g_depthStencil->GetDsv(),
                                                    D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-        {
-            g_pd3dDeviceContext->de
-        }
+        g_ParticleSystem->TickRender(g_pd3dDeviceContext);
 
-    	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
         g_pSwapChain->Present(1, 0); // Present with vsync
         //g_pSwapChain->Present(0, 0); // Present without vsync
@@ -235,11 +241,25 @@ void CleanupRenderTarget()
     if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
 }
 
-void InitiateParticleSystem()
+void InitiateParticleSystem(ImGuiIO& io)
 {
+    g_PassConstant = std::make_shared<BillboardRenderer::PassConstants>();
+    const Vector3 eyePos(0.0f, 200.0f, -200.0f);
+    const Matrix view = XMMatrixLookAtLH(eyePos, Vector3(0,0,0), Vector3(0,1,0));
+	const Matrix proj = DirectX::XMMatrixPerspectiveFovLH
+	(Pi * 0.25f, io.DisplaySize.x / io.DisplaySize.y, 0.01f, 1000.0f);
+    g_PassConstant->EyePosition = eyePos;
+    g_PassConstant->ViewProj = (view * proj).Transpose();
+
+    g_FilePaths = std::make_shared<FileSelection>();
+    g_FilePaths->emplace_back(L"./texture/doge.png");
+
+    g_BbRenderer = std::make_shared<BillboardRenderer>(g_pd3dDevice, Capacity, g_FilePaths, g_PassConstant);
+    g_BbRenderer->Initialize();
+
 	g_ParticleSoa = std::make_shared<ParticleSOA<Capacity, Architecture>>();
 
-	float a[] = {1.0f, 0.5f, 0.25f };
+	float a[] = {0.0f, -9.8f, 0.0f };
 	float c[] = 
 	{
 		0.6f, -0.5f, 0.25f, 0.124f,
@@ -249,9 +269,9 @@ void InitiateParticleSystem()
 	};
 
 	g_ParticleUniforms = std::make_shared<ParticleUniforms>(a, c);
-	g_ParticleEmitter = std::make_shared<SimpleEmitter>(0.001f);
+	g_ParticleEmitter = std::make_shared<SimpleEmitter>(1.0f);
 	g_ParticleSystem = std::make_shared<ParticleSystemCPU<Capacity, Architecture>>
-		(g_ParticleSoa, g_ParticleEmitter, g_ParticleUniforms);
+		(g_ParticleSoa, g_ParticleEmitter, g_ParticleUniforms, g_BbRenderer);
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp

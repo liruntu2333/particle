@@ -15,7 +15,7 @@
     <ClInclude Include="imgui_impl_win32.h">
       <Filter>ImguiBackend</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="BillboardRenderer.h" />
     <ClInclude Include="FileSelection.h" />
     <ClInclude Include="D3DHelper.h" />
     <ClInclude Include="StructuredBuffer.h" />
@@ -35,7 +35,7 @@
     <ClCompile Include="imgui_impl_dx11.cpp">
       <Filter>ImguiBackend</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="BillboardRenderer.cpp" />
     <ClCompile Include="Texture2D.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -50,7 +50,13 @@
     <FxCompile Include="shader\CpuParticleVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="CpuParticlePS.hlsl">
+    <FxCompile Include="shader\CpuParticlePS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="DummyVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="DummyPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
