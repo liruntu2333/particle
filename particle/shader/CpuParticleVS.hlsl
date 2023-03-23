@@ -58,7 +58,7 @@ VertexOut main(uint vertexId : SV_VertexID)
 	const float4 color = float4(g_ParticleData[3][i], g_ParticleData[4][i], g_ParticleData[5][i], g_ParticleData[6][i]);
 	float2 size = float2(g_ParticleData[7][i], g_ParticleData[8][i]);
 
-	const float3 Z = normalize(g_EyePos - center);
+	const float3 Z = normalize(center - g_EyePos);
 	const float3 X = normalize(cross(float3(0.0f, 1.0f, 0.0f), Z));
 	const float3 Y = normalize(cross(Z, X));
 	const float4 v = float4(center + offset[j].x * size.x * X + offset[j].y * size.y * Y, 1.0f);

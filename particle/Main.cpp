@@ -46,7 +46,7 @@ void CreateRenderTarget();
 void CleanupRenderTarget();
 
 void InitiateParticleSystem(ImGuiIO& io);
-void UpdateUniforms(ImGuiIO& io, std::shared_ptr<BillboardRenderer::PassConstants> uniforms);
+void UpdateConstants(ImGuiIO& io, std::shared_ptr<BillboardRenderer::PassConstants> constants);
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -154,7 +154,7 @@ int main(int, char**)
         g_pd3dDeviceContext->ClearDepthStencilView(g_depthStencil->GetDsv(),
                                                    D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-        UpdateUniforms(io, g_PassConstant);
+        UpdateConstants(io, g_PassConstant);
     	g_ParticleSystem->TickRender(g_pd3dDeviceContext);
 
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -270,15 +270,15 @@ void InitiateParticleSystem(ImGuiIO& io)
 		(g_ParticleSoa, g_ParticleEmitter, g_ParticleUniforms, g_BbRenderer);
 }
 
-void UpdateUniforms(ImGuiIO& io, std::shared_ptr<BillboardRenderer::PassConstants> uniforms)
+void UpdateConstants(ImGuiIO& io, std::shared_ptr<BillboardRenderer::PassConstants> constants)
 {
 	constexpr Vector3 eyePos(0.0f, 50.0f, -100.0f);
     const Matrix view = XMMatrixLookAtLH(eyePos, Vector3(0,0,0), Vector3(0,1,0));
 	const Matrix proj = DirectX::XMMatrixPerspectiveFovLH
 		(Pi * 0.25f, io.DisplaySize.x / io.DisplaySize.y, 0.01f, 1000.0f);
-    uniforms->EyePosition = eyePos;
-    uniforms->ViewProj = (view * proj).Transpose();
-    uniforms->DeltaTime = io.DeltaTime;
+    constants->EyePosition = eyePos;
+    constants->ViewProj = (view * proj).Transpose();
+    constants->DeltaTime = io.DeltaTime;
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp

@@ -5,12 +5,12 @@ cbuffer PassConstants : register(b0)
 
 static const float4 g_Plane[6] =
 {
-	float4(-100.0f, -50.0f, -100.0f, 1.0f),
-	float4(-100.0f, -50.0f, +100.0f, 1.0f),
-	float4(+100.0f, -50.0f, +100.0f, 1.0f),
-	float4(-100.0f, -50.0f, -100.0f, 1.0f),
-	float4(+100.0f, -50.0f, +100.0f, 1.0f),
-	float4(+100.0f, -50.0f, -100.0f, 1.0f),
+	float4(-100.0f, -20.0f, -100.0f, 1.0f),
+	float4(-100.0f, -20.0f, +100.0f, 1.0f),
+	float4(+100.0f, -20.0f, +100.0f, 1.0f),
+	float4(-100.0f, -20.0f, -100.0f, 1.0f),
+	float4(+100.0f, -20.0f, +100.0f, 1.0f),
+	float4(+100.0f, -20.0f, -100.0f, 1.0f),
 };
 
 //static const float4 g_Plane1[6] =

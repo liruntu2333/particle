@@ -99,24 +99,24 @@ void BillboardRenderer::Render(ID3D11DeviceContext* context, UINT count)
 	const auto cb0 = m_ConstantBuffer.GetBuffer();
 	context->VSSetConstantBuffers(0, 1, &cb0);
 	
-	//{
-	//	const auto opaque = g_States->Opaque();
-	//	context->OMSetBlendState(opaque, nullptr, 0xffffffff);
-	//	const auto depthWrite = g_States->DepthDefault();
-	//	context->OMSetDepthStencilState(depthWrite, 0);
-	//	context->RSSetState(g_States->CullCounterClockwise());
-	//	context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R16_UINT, 0);
-	//	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//	context->VSSetShader(g_DummyVS.Get(), nullptr, 0);
-	//	context->PSSetShader(g_DummyPS.Get(), nullptr, 0);
-	//	context->Draw(6, 0);
-	//}
+	{
+		const auto opaque = g_States->Opaque();
+		context->OMSetBlendState(opaque, nullptr, 0xffffffff);
+		const auto depthWrite = g_States->DepthDefault();
+		context->OMSetDepthStencilState(depthWrite, 0);
+		context->RSSetState(g_States->CullCounterClockwise());
+		context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R16_UINT, 0);
+		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		context->VSSetShader(g_DummyVS.Get(), nullptr, 0);
+		context->PSSetShader(g_DummyPS.Get(), nullptr, 0);
+		context->Draw(6, 0);
+	}
 
 	const auto alphaBlend = g_States->AlphaBlend();
 	context->OMSetBlendState(alphaBlend, nullptr, 0xffffffff);
 	const auto depthRead = g_States->DepthRead();
 	context->OMSetDepthStencilState(depthRead, 0);
-	context->RSSetState(g_States->CullClockwise());
+	context->RSSetState(g_States->CullCounterClockwise());
 	
 	context->IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
