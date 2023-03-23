@@ -26,10 +26,10 @@ struct VertexOut
 
 static const float2 offset[] =
 {
-	float2(+0.5f, -0.5f),
+	float2(-0.5f, +0.5f),
 	float2(+0.5f, +0.5f),
 	float2(-0.5f, -0.5f),
-	float2(-0.5f, +0.5f),
+	float2(+0.5f, -0.5f),
 };
 
 static const float2 texCoord[] =
@@ -53,7 +53,6 @@ VertexOut main(uint vertexId : SV_VertexID)
 	const float3 Z = normalize(g_EyePos - center);
 	const float3 X = normalize(cross(float3(0.0f, 1.0f, 0.0f), Z));
 	const float3 Y = normalize(cross(Z, X));
-
 	const float4 v = float4(center + offset[j].x * size.x * X + offset[j].y * size.y * Y, 1.0f);
 
 	vout.PositionH = mul(v, g_ViewProj);

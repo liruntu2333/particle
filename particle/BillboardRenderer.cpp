@@ -114,9 +114,9 @@ void BillboardRenderer::Render(ID3D11DeviceContext* context, UINT count)
 
 	const auto alphaBlend = g_States->AlphaBlend();
 	context->OMSetBlendState(alphaBlend, nullptr, 0xffffffff);
-	const auto depthTest = g_States->DepthRead();
-	context->OMSetDepthStencilState(depthTest, 0);
-	context->RSSetState(g_States->Wireframe());
+	const auto depthRead = g_States->DepthRead();
+	context->OMSetDepthStencilState(depthRead, 0);
+	context->RSSetState(g_States->CullClockwise());
 	
 	context->IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

@@ -46,6 +46,7 @@ void CreateRenderTarget();
 void CleanupRenderTarget();
 
 void InitiateParticleSystem(ImGuiIO& io);
+void UpdateUniforms(ImGuiIO& io, std::shared_ptr<BillboardRenderer::PassConstants> uniforms);
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -153,7 +154,8 @@ int main(int, char**)
         g_pd3dDeviceContext->ClearDepthStencilView(g_depthStencil->GetDsv(),
                                                    D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-        g_ParticleSystem->TickRender(g_pd3dDeviceContext);
+        UpdateUniforms(io, g_PassConstant);
+    	g_ParticleSystem->TickRender(g_pd3dDeviceContext);
 
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
@@ -244,34 +246,39 @@ void CleanupRenderTarget()
 void InitiateParticleSystem(ImGuiIO& io)
 {
     g_PassConstant = std::make_shared<BillboardRenderer::PassConstants>();
-    const Vector3 eyePos(0.0f, 200.0f, -200.0f);
-    const Matrix view = XMMatrixLookAtLH(eyePos, Vector3(0,0,0), Vector3(0,1,0));
-	const Matrix proj = DirectX::XMMatrixPerspectiveFovLH
-	(Pi * 0.25f, io.DisplaySize.x / io.DisplaySize.y, 0.01f, 1000.0f);
-    g_PassConstant->EyePosition = eyePos;
-    g_PassConstant->ViewProj = (view * proj).Transpose();
 
     g_FilePaths = std::make_shared<FileSelection>();
-    g_FilePaths->emplace_back(L"./texture/OIP-C.jpg");
+    g_FilePaths->emplace_back(L"./texture/doge.png");
 
     g_BbRenderer = std::make_shared<BillboardRenderer>(g_pd3dDevice, Capacity, g_FilePaths, g_PassConstant);
     g_BbRenderer->Initialize();
 
 	g_ParticleSoa = std::make_shared<ParticleSOA<Capacity, Architecture>>();
 
-	float a[] = {0.0f, -9.8f, 0.0f };
+	float a[] = {-11.0f, -19.8f, 0.0f };
 	float c[] = 
 	{
-		0.3f, -0.5f, 0.75f, 0.124f,
-		0.3f, -0.35f, 0.25f, 2.124f,
-		0.3f, -0.45f, 0.5f, -0.124f,
-		0.3f, -0.65f, 1.25f, -0.424f,
+		1.0f, -1.0f, -1.0f, -1.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
 	};
 
 	g_ParticleUniforms = std::make_shared<ParticleUniforms>(a, c);
 	g_ParticleEmitter = std::make_shared<SimpleEmitter>(1.0f);
 	g_ParticleSystem = std::make_shared<ParticleSystemCPU<Capacity, Architecture>>
 		(g_ParticleSoa, g_ParticleEmitter, g_ParticleUniforms, g_BbRenderer);
+}
+
+void UpdateUniforms(ImGuiIO& io, std::shared_ptr<BillboardRenderer::PassConstants> uniforms)
+{
+	constexpr Vector3 eyePos(0.0f, 50.0f, -100.0f);
+    const Matrix view = XMMatrixLookAtLH(eyePos, Vector3(0,0,0), Vector3(0,1,0));
+	const Matrix proj = DirectX::XMMatrixPerspectiveFovLH
+		(Pi * 0.25f, io.DisplaySize.x / io.DisplaySize.y, 0.01f, 1000.0f);
+    uniforms->EyePosition = eyePos;
+    uniforms->ViewProj = (view * proj).Transpose();
+    uniforms->DeltaTime = io.DeltaTime;
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp
