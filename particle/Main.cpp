@@ -16,7 +16,7 @@
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 
-constexpr size_t Capacity = 8196;
+constexpr size_t Capacity = 8192;
 using Architecture = xsimd::avx2;
 constexpr float Pi = 3.141592654f;
 

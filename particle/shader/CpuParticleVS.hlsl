@@ -40,6 +40,14 @@ static const float2 texCoord[] =
 	float2(1.0f, 1.0f),
 };
 
+static const float4 vtxCol[] = 
+{
+	float4(1.0f, 0.0f, 0.0f, 1.0f),
+	float4(0.0f, 1.0f, 0.0f, 1.0f),
+	float4(0.0f, 0.0f, 1.0f, 1.0f),
+	float4(1.0f, 1.0f, 1.0f, 1.0f),
+};
+
 VertexOut main(uint vertexId : SV_VertexID)
 {
 	VertexOut vout;
@@ -58,6 +66,7 @@ VertexOut main(uint vertexId : SV_VertexID)
 	vout.PositionH = mul(v, g_ViewProj);
 	vout.TexCoord = texCoord[j];
 	vout.Color = color;
+	//vout.Color = vtxCol[j];
 	vout.TextureId = i % 5;
 
 	return vout;

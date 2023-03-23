@@ -53,10 +53,10 @@
     <FxCompile Include="shader\CpuParticlePS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="DummyVS.hlsl">
+    <FxCompile Include="shader\DummyPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="DummyPS.hlsl">
+    <FxCompile Include="shader\DummyVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
